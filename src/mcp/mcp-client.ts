@@ -1,7 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type {
 	McpServerConfig,
 	McpToolDefinition,
@@ -33,8 +33,7 @@ function extractErrorMessage(err: unknown): string {
 
 export class McpClient {
 	private readonly client: Client;
-	// eslint-disable-next-line @typescript-eslint/no-deprecated
-	private transport: StreamableHTTPClientTransport | StdioClientTransport | SSEClientTransport | null = null;
+	private transport: Transport | null = null;
 	private httpUrl?: URL;
 	private httpHeaders?: Record<string, string>;
 	private state: McpConnectionState = {
@@ -77,9 +76,11 @@ export class McpClient {
 					this.transport = streamableTransport;
 				} catch (streamableErr) {
 					_devLog("StreamableHTTP failed, trying SSE fallback", streamableErr);
-					// SSEClientTransport is deprecated but needed as fallback for older servers
-					// eslint-disable-next-line @typescript-eslint/no-deprecated
-					const sseTransport = new SSEClientTransport(this.httpUrl, {
+					const sseModule = (await import("@modelcontextprotocol/sdk/client/sse.js")) as unknown as {
+						SSEClientTransport: new (url: URL, opts?: { requestInit?: { headers?: Record<string, string> } }) => Transport;
+					};
+					const SSETransport = sseModule.SSEClientTransport;
+					const sseTransport = new SSETransport(this.httpUrl, {
 						requestInit: Object.keys(this.httpHeaders ?? {}).length > 0
 							? { headers: this.httpHeaders }
 							: undefined,

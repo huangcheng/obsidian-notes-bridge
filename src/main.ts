@@ -502,26 +502,26 @@ export default class AdvancedImportExportPlugin extends Plugin {
 	): Promise<C | null> {
 		const { FuzzySuggestModal } = await import("obsidian");
 		return new Promise((resolve) => {
-			const picker = new (class extends (FuzzySuggestModal as new (...a: unknown[]) => InstanceType<typeof FuzzySuggestModal>) {
+			class Picker extends FuzzySuggestModal<C> {
 				private chose = false;
 				constructor(
 					app: import("obsidian").App,
 					private readonly entries: C[],
 				) {
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					super(app as any);
+					super(app);
 				}
-				getItems() { return this.entries; }
-				getItemText(item: C) { return item.displayName; }
-				onChooseItem(item: C) {
+				getItems(): C[] { return this.entries; }
+				getItemText(item: C): string { return item.displayName; }
+				onChooseItem(item: C): void {
 					this.chose = true;
 					resolve(item);
 				}
-				onClose() {
+				onClose(): void {
 					if (!this.chose) resolve(null);
-					super.onClose?.();
+					super.onClose();
 				}
-			})(this.app, items);
+			}
+			const picker = new Picker(this.app, items);
 			picker.setPlaceholder(placeholder);
 			picker.open();
 		});

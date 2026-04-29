@@ -295,10 +295,10 @@ export class YoudaoProvider implements Provider {
 	private async writeTempFile(body: string, ext: string = "md"): Promise<string> {
 		const os = loadNodeModule<{ tmpdir(): string }>("os");
 		const path = loadNodeModule<{ join(...parts: string[]): string }>("path");
-		const fs = loadNodeModule<{ writeFileSync(p: string, data: string, encoding: string): void }>("fs");
+		const fs = loadNodeModule<{ promises: { writeFile(p: string, data: string, encoding: string): Promise<void> } }>("fs");
 		const tmpDir = os.tmpdir();
 		const filePath = path.join(tmpDir, `aie-youdao-${Date.now()}-${Math.floor(Math.random() * 1e6)}.${ext}`);
-		fs.writeFileSync(filePath, body, "utf-8");
+		await fs.promises.writeFile(filePath, body, "utf-8");
 		return filePath;
 	}
 

@@ -207,8 +207,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 		);
 		const desc = containerEl.createEl("p");
 		desc.setText(
-			// eslint-disable-next-line obsidianmd/ui/sentence-case
-			"connect to WPS Note via its MCP server or the wpsnote-cli tool. desktop Obsidian only for CLI.",
+			"Connect to WPS Note via its MCP server or the local CLI. Desktop Obsidian only for CLI.",
 		);
 
 		new Setting(containerEl).setName("Display name").addText((text) =>
@@ -254,8 +253,6 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 					.setName("URL")
 					.addText((text) =>
 						text
-							// eslint-disable-next-line obsidianmd/ui/sentence-case
-							.setPlaceholder("https://localhost:8765/mcp")
 							.setValue(mcp.url ?? "")
 							.onChange(async (v) => {
 								mcp.url = v.trim();
@@ -280,8 +277,6 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			} else {
 				new Setting(containerEl).setName("Command").addText((text) =>
 					text
-						// eslint-disable-next-line obsidianmd/ui/sentence-case
-						.setPlaceholder("wpsnote-mcp")
 						.setValue(mcp.command ?? "")
 						.onChange(async (v) => {
 							mcp.command = v.trim();
@@ -305,12 +300,9 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			const cli = config.cli;
 			new Setting(containerEl)
 				.setName("CLI binary")
-				// eslint-disable-next-line obsidianmd/ui/sentence-case
-			.setDesc("Location of wpsnote-cli — leave as default to resolve via system path")
+				.setDesc("Path to the WPS Note CLI binary. Leave as default to resolve via system path.")
 				.addText((text) =>
 					text
-						// eslint-disable-next-line obsidianmd/ui/sentence-case
-						.setPlaceholder("wpsnote-cli")
 						.setValue(cli.binPath ?? "")
 						.onChange(async (v) => {
 							cli.binPath = v.trim();
@@ -359,9 +351,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			config,
 		);
 		const intro = containerEl.createEl("p");
-		intro.appendText("Youdao Note via the official ");
-		intro.createEl("code", { text: "youdaonote" }); // eslint-disable-line obsidianmd/ui/sentence-case
-		intro.appendText(" CLI. Desktop only. ");
+		intro.appendText("Connects to Youdao Note via its official CLI. Desktop only. ");
 		intro.createEl("a", {
 			text: "Get API key",
 			href: YOUDAO_API_KEY_URL,
@@ -376,11 +366,9 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("CLI binary")
-			.setDesc("Location of youdaonote — leave as default to resolve via system path")
+			.setDesc("Path to the Youdao Note CLI binary. Leave as default to resolve via system path.")
 			.addText((text) =>
 				text
-					// eslint-disable-next-line obsidianmd/ui/sentence-case
-					.setPlaceholder("youdaonote")
 					.setValue(config.cliPath ?? "")
 					.onChange(async (v) => {
 						config.cliPath = v.trim();
@@ -491,8 +479,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 	private renderBearProvider(containerEl: HTMLElement, config: BearProviderConfig): void {
 		new Setting(containerEl).setHeading().setName(config.displayName || "Bear");
 		containerEl.createEl("p", {
-			// eslint-disable-next-line obsidianmd/ui/sentence-case
-			text: "Bear notes are reached via the bear:// URL scheme (macOS and iOS only); no credentials needed",
+			text: "Bear notes are reached via Bear's URL scheme (macOS and iOS only); no credentials needed.",
 		});
 
 		new Setting(containerEl)
@@ -516,8 +503,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Trusted")
-			// eslint-disable-next-line obsidianmd/ui/sentence-case
-			.setDesc("Allow Bear to send and receive notes via x-callback-url")
+			.setDesc("Allow Bear to send and receive notes via callback URL.")
 			.addToggle((tog) =>
 				tog.setValue(config.trusted).onChange(async (v) => {
 					config.trusted = v;

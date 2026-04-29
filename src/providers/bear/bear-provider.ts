@@ -153,17 +153,19 @@ export class BearProvider implements Provider {
 		entry.resolve(note);
 	}
 
-	async listRemote(_opts?: ListOptions): Promise<RemoteListItem[]> {
+	listRemote(_opts?: ListOptions): Promise<RemoteListItem[]> {
 		// Bear's x-callback-url surface has no list endpoint. Importing
 		// requires the user to know the note id; the BearImportModal asks
 		// for it directly.
-		return [];
+		return Promise.resolve([]);
 	}
 
-	async testConnection(): Promise<{ ok: boolean; message?: string }> {
-		return bearAvailable()
-			? { ok: true, message: "Bear is reachable on this OS" }
-			: { ok: false, message: "Bear is macOS / iOS only" };
+	testConnection(): Promise<{ ok: boolean; message?: string }> {
+		return Promise.resolve(
+			bearAvailable()
+				? { ok: true, message: "Bear is reachable on this OS" }
+				: { ok: false, message: "Bear is macOS / iOS only" },
+		);
 	}
 
 	dispose(): void {
