@@ -12,6 +12,7 @@ import {
 import { ProviderFactory } from "../registry";
 import { formatFlomoContent, pickFlomoWriteTool } from "./format";
 import { FLOMO_MCP_URL, FlomoProviderConfig } from "./types";
+import { t } from "../../i18n";
 
 /**
  * Push-only provider for Flomo's official streamable-HTTP MCP at
@@ -41,7 +42,7 @@ export class FlomoProvider implements Provider {
 	available(): ProviderAvailability {
 		const token = this.config.apiToken?.trim();
 		if (!token) {
-			return { ok: false, reason: "Add a Flomo API token in settings" };
+			return { ok: false, reason: t("providers.enableInSettings") };
 		}
 		return { ok: true };
 	}
@@ -85,7 +86,7 @@ export class FlomoProvider implements Provider {
 			const writeTool = pickFlomoWriteTool(tools, this.config.writeToolName);
 			return {
 				ok: true,
-				message: `Connected — ${tools.length} tool(s) advertised; will call '${writeTool}'`,
+				message: `${t("providers.connectionSuccess")} — ${tools.length} tool(s); '${writeTool}'`,
 			};
 		} catch (err) {
 			return { ok: false, message: err instanceof Error ? err.message : String(err) };
@@ -107,13 +108,12 @@ export class FlomoProvider implements Provider {
 			this.mcpClient = null;
 		}
 		const token = this.config.apiToken?.trim();
-		if (!token) throw new Error("Flomo API token is missing");
+		if (!token) throw new Error(t("notices.apiKeyRequired"));
 		const cfg: McpServerConfig = {
 			id: `${this.config.id}-mcp`,
 			kind: "mcp",
 			displayName: this.displayName,
 			enabled: true,
-			trusted: true,
 			transportType: "http",
 			url: FLOMO_MCP_URL,
 			headers: { Authorization: `Bearer ${token}` },

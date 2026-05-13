@@ -14,6 +14,7 @@ import { bearCliCreate, bearCliList, bearCliShow, bearCliVersion, DEFAULT_BEARCL
 import { bearOpenDelayMs, delay, dispatchToBear } from "./export";
 import { bearCallbackToNote, initiateBearImport } from "./import";
 import { bearAvailable, parseBearCallback } from "./url-scheme";
+import { t } from "../../i18n";
 
 export type BearTransport = "auto" | "url" | "cli";
 
@@ -30,7 +31,6 @@ export interface BearProviderConfig extends ProviderConfigBase {
 export const DEFAULT_BEAR_CONFIG: Omit<BearProviderConfig, "id" | "displayName"> = {
 	kind: "bear",
 	enabled: true,
-	trusted: true,
 	transport: "auto",
 	cli: { binPath: DEFAULT_BEARCLI_PATH },
 };
@@ -81,7 +81,7 @@ export class BearProvider implements Provider {
 	available(): ProviderAvailability {
 		return bearAvailable()
 			? { ok: true }
-			: { ok: false, reason: "Bear is macOS / iOS only" };
+			: { ok: false, reason: t("providers.unavailable", { provider: t("brands.bear") }) };
 	}
 
 	private async useCli(): Promise<boolean> {
@@ -94,7 +94,7 @@ export class BearProvider implements Provider {
 
 	async push(note: NormalizedNote): Promise<{ remoteId: string }> {
 		if (!bearAvailable()) {
-			throw new Error("Bear export is only available on macOS / iOS");
+			throw new Error(t("providers.unavailable", { provider: t("brands.bear") }));
 		}
 		if (await this.useCli()) {
 			return bearCliCreate(this.cliBinPath, {
@@ -125,7 +125,7 @@ export class BearProvider implements Provider {
 
 	async fetch(remoteId: string, opts?: FetchOptions): Promise<NormalizedNote> {
 		if (!bearAvailable()) {
-			throw new Error("Bear import is only available on macOS / iOS");
+			throw new Error(t("providers.unavailable", { provider: t("brands.bear") }));
 		}
 		if (await this.useCli()) {
 			return bearCliShow(this.cliBinPath, remoteId);
@@ -216,21 +216,21 @@ export class BearProvider implements Provider {
 
 	async testConnection(): Promise<{ ok: boolean; message?: string }> {
 		if (!bearAvailable()) {
-			return { ok: false, message: "Bear is macOS / iOS only" };
+			return { ok: false, message: t("providers.unavailable", { provider: t("brands.bear") }) };
 		}
 		if (this.transport === "url") {
-			return { ok: true, message: "Bear URL scheme is reachable" };
+			return { ok: true, message: t("providers.connectionSuccess") };
 		}
 		if (await this.useCli()) {
 			const result = await bearCliVersion(this.cliBinPath);
 			return result.ok
-				? { ok: true, message: `bearcli ${result.version ?? "ok"} at ${this.cliBinPath}` }
-				: { ok: false, message: result.message ?? "bearcli not reachable" };
+				? { ok: true, message: t("providers.cliDetected", { version: result.version ?? "ok", path: ` ${this.cliBinPath}` }) }
+				: { ok: false, message: result.message ?? t("providers.cliNotFound", { provider: "bearcli" }) };
 		}
 		if (this.transport === "cli") {
-			return { ok: false, message: `bearcli not reachable at ${this.cliBinPath}` };
+			return { ok: false, message: t("providers.cliNotFound", { provider: `bearcli at ${this.cliBinPath}` }) };
 		}
-		return { ok: true, message: "bearcli unavailable; using URL scheme fallback" };
+		return { ok: true, message: t("providers.connectionSuccess") };
 	}
 
 	dispose(): void {

@@ -1,6 +1,7 @@
 import { App, Modal, Notice, Setting } from "obsidian";
 import { ExportPlan } from "../orchestrator/file-writer";
 import { summarize } from "../transforms/report";
+import { t } from "../i18n";
 
 export interface ConfirmResult {
 	destinationDir: string;
@@ -29,7 +30,7 @@ export class ExportConfirmModal extends Modal {
 	onOpen(): void {
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h2", { text: "Export as pure Markdown" });
+		contentEl.createEl("h2", { text: t("modals.exportConfirm.title") });
 		contentEl.createEl("p", {
 			text: `${this.plans.length} note(s) will be exported. Review the transforms below.`,
 		});

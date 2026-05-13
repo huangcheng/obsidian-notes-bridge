@@ -13,7 +13,6 @@ export const FLOMO_MCP_URL = "https://flomoapp.com/mcp";
 export const DEFAULT_FLOMO_CONFIG: Omit<FlomoProviderConfig, "id" | "displayName"> = {
 	kind: "flomo",
 	enabled: true,
-	trusted: false,
 };
 
 export const FLOMO_TOKEN_HELP_URL = "https://help.flomoapp.com/advance/mcp/token.html";

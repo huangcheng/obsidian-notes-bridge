@@ -13,6 +13,7 @@ import {
 } from "../provider";
 import { ProviderFactory } from "../registry";
 import { WPS_TOOLS, WpsProviderConfig } from "./types";
+import { t } from "../../i18n";
 
 interface WpsEnvelope<T = unknown> {
 	ok: boolean;
@@ -81,8 +82,7 @@ async function runWpsCli(
 	} catch (err) {
 		if (err instanceof CliMissingError) {
 			throw new Error(
-				`wpsnote-cli not found (${bin}). Install via the WPS Note desktop app's MCP settings page, ` +
-					`or set the absolute path in the 'CLI binary' field.`,
+				t("providers.cliNotFound", { provider: `wpsnote-cli (${bin})` }),
 			);
 		}
 		throw err;
@@ -109,14 +109,14 @@ export class WpsProvider implements Provider {
 
 	available(): ProviderAvailability {
 		if (this.config.transport === "cli" && !Platform.isDesktop) {
-			return { ok: false, reason: "WPS CLI requires Obsidian Desktop" };
+			return { ok: false, reason: t("providers.unavailable", { provider: t("brands.wps") }) };
 		}
 		if (
 			this.config.transport === "mcp" &&
 			this.config.mcp?.transportType === "stdio" &&
 			!Platform.isDesktop
 		) {
-			return { ok: false, reason: "WPS MCP stdio transport requires Obsidian Desktop" };
+			return { ok: false, reason: t("providers.unavailable", { provider: t("brands.wps") }) };
 		}
 		return { ok: true };
 	}
@@ -191,11 +191,11 @@ export class WpsProvider implements Provider {
 					return { ok: false, message: result.stderr.trim() || `wpsnote-cli exited with code ${result.code}` };
 				}
 				const env = parseEnvelope(result.stdout);
-				return { ok: env.ok !== false, message: env.message ?? "wpsnote-cli reachable" };
+				return { ok: env.ok !== false, message: env.message ?? t("providers.connectionSuccess") };
 			}
 			const client = await this.connectMcp();
 			const tools = client.getTools();
-			return { ok: true, message: `Connected — ${tools.length} tool(s) advertised` };
+			return { ok: true, message: `${t("providers.connectionSuccess")} — ${tools.length} tool(s)` };
 		} catch (err) {
 			return { ok: false, message: err instanceof Error ? err.message : String(err) };
 		}
@@ -259,7 +259,6 @@ export class WpsProvider implements Provider {
 			kind: "mcp",
 			displayName: this.displayName,
 			enabled: true,
-			trusted: true,
 			transportType: this.config.mcp?.transportType ?? "http",
 			url: this.config.mcp?.url,
 			headers: this.config.mcp?.headers,

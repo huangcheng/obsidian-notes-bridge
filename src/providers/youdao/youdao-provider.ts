@@ -11,10 +11,11 @@ import {
 import { ProviderFactory } from "../registry";
 import { ChildResult, CliMissingError, loadNodeModule, runChild, whichBin } from "../../util/subprocess";
 import { YoudaoProviderConfig } from "./types";
+import { t } from "../../i18n";
 
 export class YoudaoCliMissingError extends Error {
 	constructor(bin: string) {
-		super(`youdaonote CLI not found (${bin}).`);
+		super(t("providers.cliNotFound", { provider: `youdaonote (${bin})` }));
 		this.name = "YoudaoCliMissingError";
 	}
 }
@@ -116,7 +117,7 @@ export class YoudaoProvider implements Provider {
 
 	available(): ProviderAvailability {
 		if (!Platform.isDesktop) {
-			return { ok: false, reason: "Youdao Note requires Obsidian Desktop (CLI subprocess)" };
+			return { ok: false, reason: t("providers.unavailable", { provider: t("brands.youdao") }) };
 		}
 		return { ok: true };
 	}
@@ -268,7 +269,7 @@ export class YoudaoProvider implements Provider {
 		try {
 			this.assertDesktop();
 			const result = await runChild(this.binPath, ["config", "set", "apiKey", apiKey]);
-			if (result.code === 0) return { ok: true, message: "API key saved" };
+			if (result.code === 0) return { ok: true, message: t("notices.apiKeySaved") };
 			return { ok: false, message: result.stderr.trim() || `exited with ${result.code}` };
 		} catch (err) {
 			return { ok: false, message: err instanceof Error ? err.message : String(err) };
@@ -277,7 +278,7 @@ export class YoudaoProvider implements Provider {
 
 	private assertDesktop(): void {
 		if (!Platform.isDesktop) {
-			throw new Error("Youdao Note requires Obsidian Desktop (CLI subprocess)");
+			throw new Error(t("providers.unavailable", { provider: t("brands.youdao") }));
 		}
 	}
 
@@ -286,7 +287,7 @@ export class YoudaoProvider implements Provider {
 		const stderr = result.stderr.trim();
 		if (looksLikeApiKeyError(stderr)) {
 			throw new YoudaoApiKeyError(
-				"Youdao API key not set. Get one at https://mopen.163.com and run `youdaonote config set apiKey <key>`.",
+				t("notices.apiKeyRequired"),
 			);
 		}
 		throw new Error(stderr || `youdaonote ${command} exited with code ${result.code}`);

@@ -1,5 +1,6 @@
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import type AdvancedImportExportPlugin from "../main";
+import { t } from "../i18n";
 import { BearProvider, BearProviderConfig } from "../providers/bear/bear-provider";
 import { DEFAULT_BEARCLI_PATH } from "../providers/bear/cli";
 import { FlomoProvider } from "../providers/flomo/flomo-provider";
@@ -31,78 +32,78 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setHeading().setName("Markdown export transforms");
-		const t = this.plugin.settings.transform;
+		new Setting(containerEl).setHeading().setName(t("settings.heading.transforms"));
+		const xf = this.plugin.settings.transform;
 
 		new Setting(containerEl)
-			.setName("Resolve wikilinks")
-			.setDesc("Rewrite `[[note]]` to `[note](note.md)`. disable to keep wikilinks verbatim.")
+			.setName(t("settings.labels.resolveWikilinks"))
+			.setDesc(t("settings.descriptions.resolveWikilinks"))
 			.addToggle((tog) =>
-				tog.setValue(t.resolveWikilinks).onChange(async (v) => {
-					t.resolveWikilinks = v;
+				tog.setValue(xf.resolveWikilinks).onChange(async (v) => {
+					xf.resolveWikilinks = v;
 					await this.plugin.saveSettings();
 				}),
 			);
 
 		new Setting(containerEl)
-			.setName("Embed handling")
-			.setDesc("How to render ![[...]] embeds in exported Markdown.")
+			.setName(t("settings.labels.embedHandling"))
+			.setDesc(t("settings.descriptions.embedHandling"))
 			.addDropdown((dd) =>
 				dd
 					.addOptions({
-						drop: "Drop",
-						"replace-with-link": "Replace with link",
-						"inline-image-link": "Inline as image link",
+						drop: t("settings.options.drop"),
+						"replace-with-link": t("settings.options.replaceWithLink"),
+						"inline-image-link": t("settings.options.inlineImageLink"),
 					})
-					.setValue(t.embedHandling)
+					.setValue(xf.embedHandling)
 					.onChange(async (v) => {
-						t.embedHandling = v as typeof t.embedHandling;
+						xf.embedHandling = v as typeof xf.embedHandling;
 						await this.plugin.saveSettings();
 					}),
 			);
 
 		new Setting(containerEl)
-			.setName("Flatten callouts")
-			.setDesc("Convert `> [!note] Title` to a plain blockquote with bold title.")
+			.setName(t("settings.labels.flattenCallouts"))
+			.setDesc(t("settings.descriptions.flattenCallouts"))
 			.addToggle((tog) =>
-				tog.setValue(t.flattenCallouts).onChange(async (v) => {
-					t.flattenCallouts = v;
+				tog.setValue(xf.flattenCallouts).onChange(async (v) => {
+					xf.flattenCallouts = v;
 					await this.plugin.saveSettings();
 				}),
 			);
 
 		new Setting(containerEl)
-			.setName("Drop frontmatter")
-			.setDesc("Remove the leading YAML frontmatter block from exported Markdown.")
+			.setName(t("settings.labels.dropFrontmatter"))
+			.setDesc(t("settings.descriptions.dropFrontmatter"))
 			.addToggle((tog) =>
-				tog.setValue(t.dropFrontmatter).onChange(async (v) => {
-					t.dropFrontmatter = v;
+				tog.setValue(xf.dropFrontmatter).onChange(async (v) => {
+					xf.dropFrontmatter = v;
 					await this.plugin.saveSettings();
 				}),
 			);
 
 		new Setting(containerEl)
-			.setName("Attachment links")
-			.setDesc("How to rewrite paths to attachments referenced by embeds.")
+			.setName(t("settings.labels.attachmentLinks"))
+			.setDesc(t("settings.descriptions.attachmentLinks"))
 			.addDropdown((dd) =>
 				dd
 					.addOptions({
-						"vault-relative": "Vault-relative",
-						absolute: "Absolute filesystem path",
-						"upload-placeholder": "Upload placeholder (attachment://)",
+						"vault-relative": t("settings.options.vaultRelative"),
+						absolute: t("settings.options.absolute"),
+						"upload-placeholder": t("settings.options.uploadPlaceholder"),
 					})
-					.setValue(t.rewriteAttachments)
+					.setValue(xf.rewriteAttachments)
 					.onChange(async (v) => {
-						t.rewriteAttachments = v as typeof t.rewriteAttachments;
+						xf.rewriteAttachments = v as typeof xf.rewriteAttachments;
 						await this.plugin.saveSettings();
 					}),
 			);
 
-		new Setting(containerEl).setHeading().setName("File locations");
+		new Setting(containerEl).setHeading().setName(t("settings.heading.fileLocations"));
 
 		new Setting(containerEl)
-			.setName("Default export folder")
-			.setDesc("Vault-relative folder used by `Export as pure Markdown`.")
+			.setName(t("settings.labels.defaultExportFolder"))
+			.setDesc(t("settings.descriptions.defaultExportFolder"))
 			.addText((text) =>
 				text
 					.setPlaceholder("Exports")
@@ -114,8 +115,8 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Default import folder")
-			.setDesc("Folder for incoming notes, relative to the vault root.")
+			.setName(t("settings.labels.defaultImportFolder"))
+			.setDesc(t("settings.descriptions.defaultImportFolder"))
 			.addText((text) =>
 				text
 					.setPlaceholder("Imports")
@@ -127,8 +128,8 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Concurrency")
-			.setDesc("Maximum number of provider operations to run in parallel (1-16).")
+			.setName(t("settings.labels.concurrency"))
+			.setDesc(t("settings.descriptions.concurrency"))
 			.addText((text) =>
 				text
 					.setValue(String(this.plugin.settings.concurrency))
@@ -142,8 +143,8 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Developer log")
-			.setDesc("Print verbose diagnostics to the developer console (avoids secrets).")
+			.setName(t("settings.labels.developerLog"))
+			.setDesc(t("settings.descriptions.developerLog"))
 			.addToggle((tog) =>
 				tog.setValue(this.plugin.settings.developerLog).onChange(async (v) => {
 					this.plugin.settings.developerLog = v;
@@ -151,9 +152,14 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				}),
 			);
 
-		new Setting(containerEl).setHeading().setName("Providers");
+		new Setting(containerEl).setHeading().setName(t("settings.heading.providers"));
 		containerEl.createEl("p", {
-			text: `Configure note-source integrations for ${BEAR_NAME}, ${WPS_NAME}, ${YOUDAO_NAME}, and ${FLOMO_NAME}. Each provider exposes import / export operations to the plugin's commands and the file-explorer right-click menu.`,
+			text: t("settings.providerIntro", {
+				bear: t("brands.bear"),
+				wps: t("brands.wps"),
+				youdao: t("brands.youdao"),
+				flomo: t("brands.flomo"),
+			}),
 		});
 
 		for (const cfg of this.plugin.settings.providers) {
@@ -184,8 +190,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 
 	/**
 	 * Wrap a provider card in a native <details> element so users can
-	 * collapse it. Untrusted (i.e. not-yet-configured) providers stay
-	 * open so the config form is visible immediately after add.
+	 * expand it. All providers start collapsed by default.
 	 */
 	private openCollapsibleCard(
 		parentEl: HTMLElement,
@@ -193,15 +198,11 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 		config: ProviderConfigBase,
 	): HTMLElement {
 		const details = parentEl.createEl("details", { cls: "aie-provider-card" });
-		if (!config.trusted) details.open = true;
+		details.open = false;
 		const summary = details.createEl("summary");
-		const label = summary.createEl("strong", { text: title });
-		void label;
-		const flags: string[] = [];
-		if (!config.enabled) flags.push("disabled");
-		if (!config.trusted) flags.push("untrusted");
-		if (flags.length > 0) {
-			summary.appendText(` — ${flags.join(", ")}`);
+		summary.createEl("strong", { text: title });
+		if (!config.enabled) {
+			summary.appendText(" — disabled");
 		}
 		return details.createDiv({ cls: "aie-provider-body" });
 	}
@@ -209,27 +210,27 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 	private renderWpsProvider(parentEl: HTMLElement, config: WpsProviderConfig): void {
 		const containerEl = this.openCollapsibleCard(
 			parentEl,
-			config.displayName || "WPS Cloud Note",
+			config.displayName || t("brands.wps"),
 			config,
 		);
 		const desc = containerEl.createEl("p");
 		desc.setText(
-			`Connect to ${WPS_NAME} via its server endpoint or the local CLI. Desktop Obsidian only for CLI.`,
+			t("providers.wpsDescription", { provider: WPS_NAME }),
 		);
 
-		new Setting(containerEl).setName("Display name").addText((text) =>
+		new Setting(containerEl).setName(t("settings.labels.displayName")).addText((text) =>
 			text.setValue(config.displayName).onChange(async (v) => {
-				config.displayName = v.trim() || "WPS Cloud Note";
+				config.displayName = v.trim() || t("brands.wps");
 				await this.plugin.saveSettings();
 			}),
 		);
 
 		new Setting(containerEl)
-			.setName("Transport")
-			.setDesc(`Choose how the plugin reaches ${WPS_NAME}.`)
+			.setName(t("settings.labels.transport"))
+			.setDesc(t("settings.descriptions.transport", { provider: WPS_NAME }))
 			.addDropdown((dd) =>
 				dd
-					.addOptions({ mcp: "MCP server", cli: "wpsnote-cli (CLI)" })
+					.addOptions({ mcp: t("settings.options.mcpServer"), cli: t("settings.options.cli", { provider: "wpsnote-cli" }) })
 					.setValue(config.transport)
 					.onChange(async (v) => {
 						config.transport = v as WpsProviderConfig["transport"];
@@ -243,10 +244,10 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			const mcp = config.mcp;
 
 			new Setting(containerEl)
-				.setName("Server transport")
+				.setName(t("settings.labels.serverTransport"))
 				.addDropdown((dd) =>
 					dd
-						.addOptions({ http: "HTTP", stdio: "Stdio" })
+						.addOptions({ http: t("settings.options.http"), stdio: t("settings.options.stdio") })
 						.setValue(mcp.transportType ?? "http")
 						.onChange(async (v) => {
 							mcp.transportType = v as "http" | "stdio";
@@ -257,7 +258,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 
 			if ((mcp.transportType ?? "http") === "http") {
 				new Setting(containerEl)
-					.setName("URL")
+					.setName(t("settings.labels.url"))
 					.addText((text) =>
 						text
 							.setValue(mcp.url ?? "")
@@ -267,8 +268,8 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 							}),
 					);
 				new Setting(containerEl)
-					.setName("Headers")
-					.setDesc("Optional HTTP headers as JSON (e.g. { \"Authorization\": \"Bearer ...\" })")
+					.setName(t("settings.labels.headers"))
+					.setDesc(t("settings.descriptions.headers"))
 					.addTextArea((ta) =>
 						ta
 							.setValue(JSON.stringify(mcp.headers ?? {}, null, 2))
@@ -282,7 +283,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 							}),
 					);
 			} else {
-				new Setting(containerEl).setName("Command").addText((text) =>
+				new Setting(containerEl).setName(t("settings.labels.command")).addText((text) =>
 					text
 						.setValue(mcp.command ?? "")
 						.onChange(async (v) => {
@@ -291,8 +292,8 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 						}),
 				);
 				new Setting(containerEl)
-					.setName("Args")
-					.setDesc("Space-separated arguments")
+					.setName(t("settings.labels.args"))
+					.setDesc(t("settings.descriptions.args"))
 					.addText((text) =>
 						text
 							.setValue((mcp.args ?? []).join(" "))
@@ -306,8 +307,8 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			if (!config.cli) config.cli = { binPath: "wpsnote-cli" };
 			const cli = config.cli;
 			new Setting(containerEl)
-				.setName("CLI binary")
-				.setDesc(`Path to the ${WPS_NAME} CLI binary. Leave as default to resolve via system path.`)
+				.setName(t("settings.labels.cliBinary"))
+				.setDesc(t("settings.descriptions.cliBinary", { provider: WPS_NAME }))
 				.addText((text) =>
 					text
 						.setValue(cli.binPath ?? "")
@@ -318,35 +319,26 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				);
 		}
 
-		new Setting(containerEl).setName("Enabled").addToggle((tog) =>
+		new Setting(containerEl).setName(t("settings.labels.enabled")).addToggle((tog) =>
 			tog.setValue(config.enabled).onChange(async (v) => {
 				config.enabled = v;
 				await this.plugin.saveSettings();
 			}),
 		);
-		new Setting(containerEl)
-			.setName("Trusted")
-			.setDesc("Allow this provider to read and write notes.")
-			.addToggle((tog) =>
-				tog.setValue(config.trusted).onChange(async (v) => {
-					config.trusted = v;
-					await this.plugin.saveSettings();
-				}),
-			);
 
 		new Setting(containerEl)
-			.setName("Test connection")
+			.setName(t("settings.labels.testConnection"))
 			.addButton((btn) =>
-				btn.setButtonText("Test").onClick(async () => {
+				btn.setButtonText(t("settings.buttons.test")).onClick(async () => {
 					const provider = this.plugin.registry.get(config.id) as WpsProvider | null;
 					if (!provider) {
-						new Notice("Save the provider first (enabled + trusted) and retry.");
+						new Notice(t("providers.notEnabled"));
 						return;
 					}
-					const notice = new Notice("Testing connection...", 0);
+					const notice = new Notice(t("notices.connectionTesting"), 0);
 					const result = await provider.testConnection?.();
 					notice.hide();
-					new Notice(result?.message ?? (result?.ok ? "Connected" : "Connection failed"));
+					new Notice(result?.message ?? (result?.ok ? t("notices.connectionSuccess") : t("notices.connectionFailed")));
 				}),
 			);
 	}
@@ -354,26 +346,26 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 	private renderYoudaoProvider(parentEl: HTMLElement, config: YoudaoProviderConfig): void {
 		const containerEl = this.openCollapsibleCard(
 			parentEl,
-			config.displayName || "Youdao Note",
+			config.displayName || t("brands.youdao"),
 			config,
 		);
 		const intro = containerEl.createEl("p");
-		intro.appendText("Connects to Youdao Note via its official CLI. Desktop only. ");
+		intro.appendText(t("providers.youdaoIntro") + " ");
 		intro.createEl("a", {
-			text: "Get API key",
+			text: t("providers.getApiKey"),
 			href: YOUDAO_API_KEY_URL,
 		}).setAttr("target", "_blank");
 
-		new Setting(containerEl).setName("Display name").addText((text) =>
+		new Setting(containerEl).setName(t("settings.labels.displayName")).addText((text) =>
 			text.setValue(config.displayName).onChange(async (v) => {
-				config.displayName = v.trim() || "Youdao Note";
+				config.displayName = v.trim() || t("brands.youdao");
 				await this.plugin.saveSettings();
 			}),
 		);
 
 		new Setting(containerEl)
-			.setName("CLI binary")
-			.setDesc(`Path to the ${YOUDAO_NAME} CLI binary. Leave as default to resolve via system path.`)
+			.setName(t("settings.labels.cliBinary"))
+			.setDesc(t("settings.descriptions.cliBinary", { provider: YOUDAO_NAME }))
 			.addText((text) =>
 				text
 					.setValue(config.cliPath ?? "")
@@ -384,8 +376,8 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("API key")
-			.setDesc("Stored only locally. The plugin pushes it to the CLI via `youdaonote config set apiKey`.")
+			.setName(t("settings.labels.apiKey"))
+			.setDesc(t("settings.descriptions.apiKey"))
 			.addText((text) => {
 				text.inputEl.type = "password";
 				text.setValue(config.apiKey ?? "").onChange(async (v) => {
@@ -394,24 +386,24 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				});
 			})
 			.addButton((btn) =>
-				btn.setButtonText("Save to CLI").onClick(async () => {
+				btn.setButtonText(t("settings.buttons.saveToCli")).onClick(async () => {
 					if (!config.apiKey) {
-						new Notice("Enter an API key first.");
+						new Notice(t("notices.apiKeyRequired"));
 						return;
 					}
 					const provider = this.plugin.registry.get(config.id) as YoudaoProvider | null;
 					if (!provider) {
-						new Notice("Enable + trust the provider first, then retry.");
+						new Notice(t("providers.notEnabled"));
 						return;
 					}
 					const result = await provider.setApiKey(config.apiKey);
-					new Notice(result.message ?? (result.ok ? "API key saved" : "Failed to save API key"));
+					new Notice(result.message ?? (result.ok ? t("notices.apiKeySaved") : t("notices.apiKeySaveFailed")));
 				}),
 			);
 
 		new Setting(containerEl)
-			.setName("Default folder ID")
-			.setDesc("Optional. Folder ID under which new notes are saved. Leave empty for the default folder.")
+			.setName(t("settings.labels.defaultFolderId"))
+			.setDesc(t("settings.descriptions.defaultFolderId"))
 			.addText((text) =>
 				text
 					.setValue(config.defaultFolderId ?? "")
@@ -421,36 +413,30 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl).setName("Enabled").addToggle((tog) =>
+		new Setting(containerEl).setName(t("settings.labels.enabled")).addToggle((tog) =>
 			tog.setValue(config.enabled).onChange(async (v) => {
 				config.enabled = v;
 				await this.plugin.saveSettings();
 			}),
 		);
-		new Setting(containerEl)
-			.setName("Trusted")
-			.setDesc("Allow this provider to read and write notes via the CLI.")
-			.addToggle((tog) =>
-				tog.setValue(config.trusted).onChange(async (v) => {
-					config.trusted = v;
-					await this.plugin.saveSettings();
-				}),
-			);
 
 		new Setting(containerEl)
-			.setName("Detect CLI")
-			.setDesc("Verify that youdaonote is installed and executable.")
+			.setName(t("settings.labels.detectCli"))
+			.setDesc(t("settings.descriptions.detectCli"))
 			.addButton((btn) =>
-				btn.setButtonText("Detect").onClick(async () => {
+				btn.setButtonText(t("settings.buttons.detect")).onClick(async () => {
 					const provider = this.plugin.registry.get(config.id) as YoudaoProvider | null;
 					if (!provider) {
-						new Notice("Enable + trust the provider first, then retry.");
+						new Notice(t("providers.notEnabled"));
 						return;
 					}
 					const result = await provider.detectCli();
 					if (result.installed) {
 						new Notice(
-							`Found ${result.version ?? "youdaonote"}${result.resolvedPath ? ` at ${result.resolvedPath}` : ""}`,
+							t("notices.cliDetected", {
+								version: result.version ?? "youdaonote",
+								path: result.resolvedPath ? ` at ${result.resolvedPath}` : "",
+							}),
 							8000,
 						);
 					} else {
@@ -460,18 +446,18 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Test connection")
+			.setName(t("settings.labels.testConnection"))
 			.addButton((btn) =>
-				btn.setButtonText("Test").onClick(async () => {
+				btn.setButtonText(t("settings.buttons.test")).onClick(async () => {
 					const provider = this.plugin.registry.get(config.id) as YoudaoProvider | null;
 					if (!provider) {
-						new Notice("Enable + trust the provider first, then retry.");
+						new Notice(t("providers.notEnabled"));
 						return;
 					}
-					const notice = new Notice("Testing connection...", 0);
+					const notice = new Notice(t("notices.connectionTesting"), 0);
 					const result = await provider.testConnection?.();
 					notice.hide();
-					new Notice(result?.message ?? (result?.ok ? "Connected" : "Failed"));
+					new Notice(result?.message ?? (result?.ok ? t("notices.connectionSuccess") : t("notices.connectionFailed")));
 				}),
 			);
 	}
@@ -479,30 +465,30 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 	private renderFlomoProvider(parentEl: HTMLElement, config: FlomoProviderConfig): void {
 		const containerEl = this.openCollapsibleCard(
 			parentEl,
-			config.displayName || "Flomo",
+			config.displayName || t("brands.flomo"),
 			config,
 		);
 		const intro = containerEl.createEl("p");
 		intro.appendText(
-			`Export memos to ${FLOMO_NAME} via its official MCP server. Requires a Flomo Pro account and an API token. `,
+			t("providers.flomoIntro", { provider: FLOMO_NAME }) + " ",
 		);
 		intro
 			.createEl("a", {
-				text: "Get a token",
+				text: t("providers.getToken"),
 				href: FLOMO_TOKEN_HELP_URL,
 			})
 			.setAttr("target", "_blank");
 
-		new Setting(containerEl).setName("Display name").addText((text) =>
+		new Setting(containerEl).setName(t("settings.labels.displayName")).addText((text) =>
 			text.setValue(config.displayName).onChange(async (v) => {
-				config.displayName = v.trim() || "Flomo";
+				config.displayName = v.trim() || t("brands.flomo");
 				await this.plugin.saveSettings();
 			}),
 		);
 
 		new Setting(containerEl)
-			.setName("API token")
-			.setDesc("Stored locally. Sent to https://flomoapp.com/mcp as 'Authorization: Bearer <token>'.")
+			.setName(t("settings.labels.apiToken"))
+			.setDesc(t("settings.descriptions.apiToken"))
 			.addText((text) => {
 				text.inputEl.type = "password";
 				text.setValue(config.apiToken ?? "").onChange(async (v) => {
@@ -512,8 +498,8 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName("Write tool name")
-			.setDesc("Optional override. Leave empty to auto-pick (write_note → write_memo → first write_*).")
+			.setName(t("settings.labels.writeToolName"))
+			.setDesc(t("settings.descriptions.writeToolName"))
 			.addText((text) =>
 				text
 					.setValue(config.writeToolName ?? "")
@@ -523,35 +509,26 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl).setName("Enabled").addToggle((tog) =>
+		new Setting(containerEl).setName(t("settings.labels.enabled")).addToggle((tog) =>
 			tog.setValue(config.enabled).onChange(async (v) => {
 				config.enabled = v;
 				await this.plugin.saveSettings();
 			}),
 		);
-		new Setting(containerEl)
-			.setName("Trusted")
-			.setDesc(`Allow this provider to send memos to ${FLOMO_NAME}.`)
-			.addToggle((tog) =>
-				tog.setValue(config.trusted).onChange(async (v) => {
-					config.trusted = v;
-					await this.plugin.saveSettings();
-				}),
-			);
 
 		new Setting(containerEl)
-			.setName("Test connection")
+			.setName(t("settings.labels.testConnection"))
 			.addButton((btn) =>
-				btn.setButtonText("Test").onClick(async () => {
+				btn.setButtonText(t("settings.buttons.test")).onClick(async () => {
 					const provider = this.plugin.registry.get(config.id) as FlomoProvider | null;
 					if (!provider) {
-						new Notice("Save the provider first (enabled + trusted) and retry.");
+						new Notice(t("providers.notEnabled"));
 						return;
 					}
-					const notice = new Notice("Testing connection...", 0);
+					const notice = new Notice(t("notices.connectionTesting"), 0);
 					const result = await provider.testConnection?.();
 					notice.hide();
-					new Notice(result?.message ?? (result?.ok ? "Connected" : "Connection failed"));
+					new Notice(result?.message ?? (result?.ok ? t("notices.connectionSuccess") : t("notices.connectionFailed")));
 				}),
 			);
 	}
@@ -563,27 +540,31 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 		);
 	}
 
-	private renderBearProvider(containerEl: HTMLElement, config: BearProviderConfig): void {
-		new Setting(containerEl).setHeading().setName(config.displayName || "Bear");
-		containerEl.createEl("p", {
-			text: `${BEAR_NAME} notes are reached via the official bearcli (desktop) or the app's URL scheme (macOS and iOS); no credentials needed.`,
-		});
+	private renderBearProvider(parentEl: HTMLElement, config: BearProviderConfig): void {
+		const containerEl = this.openCollapsibleCard(
+			parentEl,
+			config.displayName || t("brands.bear"),
+			config,
+		);
+
+		const desc = containerEl.createEl("p");
+		desc.setText(t("providers.bearDescription", { provider: BEAR_NAME }));
 
 		new Setting(containerEl)
-			.setName("Display name")
+			.setName(t("settings.labels.displayName"))
 			.addText((text) =>
 				text.setValue(config.displayName).onChange(async (v) => {
-					config.displayName = v.trim() || "Bear";
+					config.displayName = v.trim() || t("brands.bear");
 					await this.plugin.saveSettings();
 				}),
 			);
 
 		new Setting(containerEl)
-			.setName("Transport")
-			.setDesc("Auto probes bearcli once, then falls back to the URL scheme. URL = legacy / iOS only. CLI = require bearcli.")
+			.setName(t("settings.labels.transport"))
+			.setDesc(t("providers.bearTransportDesc"))
 			.addDropdown((dd) =>
 				dd
-					.addOptions({ auto: "Auto", cli: "bearcli", url: "URL scheme" })
+					.addOptions({ auto: t("settings.options.auto"), cli: t("settings.options.bearCli"), url: t("settings.options.urlScheme") })
 					.setValue(config.transport ?? "auto")
 					.onChange(async (v) => {
 						config.transport = v as BearProviderConfig["transport"];
@@ -598,8 +579,8 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			const cli = config.cli;
 
 			new Setting(containerEl)
-				.setName("CLI binary")
-				.setDesc(`Path to bearcli. Default ships inside ${BEAR_NAME}.app on macOS.`)
+				.setName(t("settings.labels.cliBinary"))
+				.setDesc(t("settings.descriptions.cliBinary", { provider: `${BEAR_NAME}.app on macOS` }))
 				.addText((text) =>
 					text
 						.setPlaceholder(DEFAULT_BEARCLI_PATH)
@@ -611,19 +592,22 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				);
 
 			new Setting(containerEl)
-				.setName("Detect CLI")
-				.setDesc("Verify that bearcli is installed and executable.")
+				.setName(t("settings.labels.detectCli"))
+				.setDesc(t("settings.descriptions.detectCli"))
 				.addButton((btn) =>
-					btn.setButtonText("Detect").onClick(async () => {
+					btn.setButtonText(t("settings.buttons.detect")).onClick(async () => {
 						const provider = this.plugin.registry.get(config.id) as BearProvider | null;
 						if (!provider) {
-							new Notice("Enable + trust the provider first, then retry.");
+							new Notice(t("providers.notEnabled"));
 							return;
 						}
 						const result = await provider.detectCli();
 						if (result.installed) {
 							new Notice(
-								`Found bearcli ${result.version ?? ""}${result.resolvedPath ? ` at ${result.resolvedPath}` : ""}`.trim(),
+								t("notices.cliDetected", {
+									version: `bearcli ${result.version ?? ""}`,
+									path: result.resolvedPath ? ` at ${result.resolvedPath}` : "",
+								}).trim(),
 								8000,
 							);
 						} else {
@@ -634,8 +618,8 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 		}
 
 		new Setting(containerEl)
-			.setName("Enabled")
-			.setDesc(`Show ${BEAR_NAME} in commands and the file-explorer submenu.`)
+			.setName(t("settings.labels.enabled"))
+			.setDesc(t("settings.descriptions.enabled", { provider: BEAR_NAME }))
 			.addToggle((tog) =>
 				tog.setValue(config.enabled).onChange(async (v) => {
 					config.enabled = v;
@@ -644,26 +628,16 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Trusted")
-			.setDesc(`Allow ${BEAR_NAME} to send and receive notes via callback URL.`)
-			.addToggle((tog) =>
-				tog.setValue(config.trusted).onChange(async (v) => {
-					config.trusted = v;
-					await this.plugin.saveSettings();
-				}),
-			);
-
-		new Setting(containerEl)
-			.setName("Test connection")
+			.setName(t("settings.labels.testConnection"))
 			.addButton((btn) =>
-				btn.setButtonText("Test").onClick(async () => {
+				btn.setButtonText(t("settings.buttons.test")).onClick(async () => {
 					const provider = this.plugin.registry.get(config.id) as BearProvider | null;
 					if (!provider) {
-						new Notice("Bear provider isn't registered. Enable + trust it first, then save.");
+						new Notice(t("providers.notEnabled"));
 						return;
 					}
 					const result = await provider.testConnection?.();
-					new Notice(result?.message ?? (result?.ok ? "Bear is reachable" : "Bear is not available"));
+					new Notice(result?.message ?? (result?.ok ? `${BEAR_NAME} is reachable` : `${BEAR_NAME} is not available`));
 				}),
 			);
 	}

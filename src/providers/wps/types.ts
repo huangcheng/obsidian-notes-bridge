@@ -27,7 +27,6 @@ export const DEFAULT_WPS_CONFIG: Omit<WpsProviderConfig, "id" | "displayName"> =
 	kind: "wps",
 	transport: "mcp",
 	enabled: true,
-	trusted: false,
 	mcp: {
 		transportType: "http",
 		url: "",

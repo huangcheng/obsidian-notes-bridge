@@ -7,7 +7,6 @@ export interface ProviderConfigBase {
 	kind: ProviderKind;
 	displayName: string;
 	enabled: boolean;
-	trusted: boolean;
 }
 
 export interface ProviderFactory<C extends ProviderConfigBase = ProviderConfigBase> {
@@ -64,7 +63,7 @@ export class ProviderRegistry {
 		const cached = this.instances.get(id);
 		if (cached) return cached;
 		const cfg = this.configs.get(id);
-		if (!cfg || !cfg.enabled || !cfg.trusted) return null;
+		if (!cfg || !cfg.enabled) return null;
 		const factory = this.factories.get(cfg.kind);
 		if (!factory) return null;
 		const provider = factory.create(cfg);

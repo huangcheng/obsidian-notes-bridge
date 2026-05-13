@@ -1,5 +1,6 @@
 import { App, Modal, Notice, Setting } from "obsidian";
 import { BEAR_NAME } from "./brand-names";
+import { t } from "../i18n";
 
 export interface BearImportRequest {
 	noteId: string;
@@ -21,7 +22,7 @@ export class BearImportModal extends Modal {
 	onOpen(): void {
 		const { contentEl } = this;
 		contentEl.empty();
-		new Setting(contentEl).setHeading().setName(`Import from ${BEAR_NAME}`);
+		new Setting(contentEl).setHeading().setName(t("modals.bearImport.title"));
 
 		if (this.phase === "input") {
 			this.renderInputPhase(contentEl);

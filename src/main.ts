@@ -1,4 +1,5 @@
 import { Menu, MenuItem, Notice, ObsidianProtocolData, Plugin, TAbstractFile, TFile } from "obsidian";
+import { initializeI18n, t } from "./i18n";
 import { Orchestrator } from "./orchestrator/orchestrator";
 import { planExport, writeExports } from "./orchestrator/file-writer";
 import { BearProvider } from "./providers/bear/bear-provider";
@@ -17,7 +18,7 @@ import { NoteSelection } from "./selection/note-selection";
 import { applyDefaultProviderMigration, DEFAULT_SETTINGS, PluginSettings } from "./settings";
 import { AdvancedImportExportSettingTab } from "./settings/settings-tab";
 import { MarkdownTransformer } from "./transforms/transformer";
-import { BEAR_NAME, FLOMO_NAME, PLUGIN_NAME, WPS_NAME, YOUDAO_NAME } from "./ui/brand-names";
+import { BEAR_NAME, FLOMO_NAME, WPS_NAME, YOUDAO_NAME } from "./ui/brand-names";
 import { ExportConfirmModal } from "./ui/export-confirm-modal";
 import { BearImportModal } from "./ui/bear-import-modal";
 
@@ -28,6 +29,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 	private bearImportModal: BearImportModal | null = null;
 
 	async onload(): Promise<void> {
+		initializeI18n();
 		this.registry = new ProviderRegistry();
 		registerAllFactories(this.registry);
 		await this.loadSettings();
@@ -39,7 +41,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 
 		this.addCommand({
 			id: "copy-as-pure-markdown",
-			name: "Copy as pure Markdown",
+			name: t("commands.copyAsMarkdown"),
 			checkCallback: (checking) => {
 				const sel = selectionFromActiveEditor(this.app);
 				if (!sel || sel.notes.length === 0) return false;
@@ -50,7 +52,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 
 		this.addCommand({
 			id: "export-as-pure-markdown-active",
-			name: "Export current note as pure Markdown",
+			name: t("commands.exportCurrentNote"),
 			checkCallback: (checking) => {
 				const sel = selectionFromActiveEditor(this.app);
 				if (!sel || sel.notes.length === 0) return false;
@@ -80,7 +82,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 
 		this.addCommand({
 			id: "export-active-to-bear",
-			name: `Send active note to ${BEAR_NAME}`,
+			name: t("commands.sendToBear"),
 			checkCallback: (checking) => {
 				const sel = selectionFromActiveEditor(this.app);
 				if (!sel || sel.notes.length === 0) return false;
@@ -91,13 +93,13 @@ export default class AdvancedImportExportPlugin extends Plugin {
 
 		this.addCommand({
 			id: "import-from-bear",
-			name: `Import from ${BEAR_NAME}`,
+			name: t("commands.importFromBear"),
 			callback: () => this.importFromBear(),
 		});
 
 		this.addCommand({
 			id: "export-active-to-wps",
-			name: `Send active note to ${WPS_NAME}…`,
+			name: t("commands.sendToWps"),
 			checkCallback: (checking) => {
 				if (this.listWpsConfigs().length === 0) return false;
 				const sel = selectionFromActiveEditor(this.app);
@@ -109,7 +111,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 
 		this.addCommand({
 			id: "export-active-to-youdao",
-			name: `Send active note to ${YOUDAO_NAME}…`,
+			name: t("commands.sendToYoudao"),
 			checkCallback: (checking) => {
 				if (this.listYoudaoConfigs().length === 0) return false;
 				const sel = selectionFromActiveEditor(this.app);
@@ -121,7 +123,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 
 		this.addCommand({
 			id: "export-active-to-flomo",
-			name: `Send active note to ${FLOMO_NAME}…`,
+			name: t("commands.sendToFlomo"),
 			checkCallback: (checking) => {
 				if (this.listFlomoConfigs().length === 0) return false;
 				const sel = selectionFromActiveEditor(this.app);
@@ -166,7 +168,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 	private async copyAsPureMarkdown(selection: NoteSelection): Promise<void> {
 		const file = selection.notes[0];
 		if (!file) {
-			new Notice("No active note to copy");
+			new Notice(t("notices.noActiveNote"));
 			return;
 		}
 		const transformer = this.buildTransformer();
@@ -174,15 +176,15 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		const { output } = transformer.run({ source, file });
 		try {
 			await navigator.clipboard.writeText(output);
-			new Notice("Copied as pure Markdown");
+			new Notice(t("notices.copied"));
 		} catch (err) {
-			new Notice(`Clipboard write failed: ${errorMessage(err)}`);
+			new Notice(t("notices.clipboardFailed", { error: errorMessage(err) }));
 		}
 	}
 
 	private async exportSelection(selection: NoteSelection): Promise<void> {
 		if (selection.notes.length === 0) {
-			new Notice("No Markdown notes selected");
+			new Notice(t("notices.noNotesSelected"));
 			return;
 		}
 		const transformer = this.buildTransformer();
@@ -197,7 +199,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 					collisionPolicy: "rename",
 				});
 				new Notice(
-					`Export complete: ${summary.written.length} written, ${summary.skipped.length} skipped, ${summary.failed.length} failed`,
+					t("notices.exportComplete", { written: summary.written.length, skipped: summary.skipped.length, failed: summary.failed.length }),
 				);
 			})();
 		}).open();
@@ -211,17 +213,17 @@ export default class AdvancedImportExportPlugin extends Plugin {
 
 	private async exportToBear(files: TFile[]): Promise<void> {
 		if (files.length === 0) {
-			new Notice("No notes to export");
+			new Notice(t("notices.noNotesToExport"));
 			return;
 		}
 		const provider = this.getBearProvider();
 		if (!provider) {
- new Notice("Bear provider is not configured. Enable it in settings → providers.");
+ new Notice(t("notices.bearNotConfigured"));
 			return;
 		}
 		const avail = provider.available?.() ?? { ok: true };
 		if (!avail.ok) {
-			new Notice(avail.reason ?? "Bear is unavailable");
+			new Notice(avail.reason ?? t("notices.bearUnavailable"));
 			return;
 		}
 		const transformer = this.buildTransformer();
@@ -246,28 +248,28 @@ export default class AdvancedImportExportPlugin extends Plugin {
 			}
 		}
 		if (failed === 0) {
-			new Notice(`Exported ${dispatched} note${dispatched !== 1 ? "s" : ""} to Bear`);
+			new Notice(t("notices.bearDispatched", { count: dispatched, s: dispatched !== 1 ? "s" : "" }));
 		} else {
-			new Notice(`Bear export: ${dispatched} sent, ${failed} failed.`);
+			new Notice(t("notices.bearPartialFail", { dispatched, failed }));
 		}
 	}
 
 	private importFromBear(): void {
 		const provider = this.getBearProvider();
 		if (!provider) {
-			new Notice("Bear provider is not configured. Enable it in settings → providers.");
+			new Notice(t("notices.bearNotConfigured"));
 			return;
 		}
 		const avail = provider.available?.() ?? { ok: true };
 		if (!avail.ok) {
-			new Notice(avail.reason ?? "Bear is unavailable");
+			new Notice(avail.reason ?? t("notices.bearUnavailable"));
 			return;
 		}
 		this.bearImportModal = new BearImportModal(this.app, (request) => {
 			void (async () => {
 				const noteId = parseBearInput(request.noteId);
 				if (!noteId) {
-					new Notice(`Invalid ${BEAR_NAME} identifier — enter a UUID or URL.`);
+					new Notice(t("notices.invalidBearId"));
 					return;
 				}
 				this.bearImportModal?.setWaiting();
@@ -275,11 +277,11 @@ export default class AdvancedImportExportPlugin extends Plugin {
 					const note = await provider.fetch(noteId);
 					const path = await writeImportedNote(this.app, note, this.settings.defaultImportDir);
 					this.bearImportModal?.setDone(true, `Note imported to ${path}`);
-					new Notice(`Imported "${note.title}" to ${path}`);
+					new Notice(t("notices.bearImported", { title: note.title, path }));
 				} catch (err) {
 					const msg = errorMessage(err);
 					this.bearImportModal?.setDone(false, msg);
-					new Notice(`Bear import failed: ${msg}`);
+					new Notice(t("notices.bearImportFailed", { error: msg }));
 				}
 			})();
 		});
@@ -302,13 +304,13 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		if (notes.length === 0) return;
 
 		menu.addItem((item) => {
-			item.setTitle(`${PLUGIN_NAME}`).setIcon("lucide-arrow-left-right");
+			item.setTitle(t("brands.plugin")).setIcon("lucide-arrow-left-right");
 			const sub = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
 
 			if (notes.length === 1) {
 				sub.addItem((s) =>
 					s
-						.setTitle("Copy as pure Markdown")
+						.setTitle(t("commands.copyAsMarkdown"))
 						.setIcon("clipboard-copy")
 						.onClick(() => void this.copyAsPureMarkdown(selection)),
 				);
@@ -325,14 +327,14 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		if (files.length === 0) return;
 		const macOnly = !bearAvailable();
 		menu.addItem((item) => {
-			item.setTitle(`${BEAR_NAME}`).setIcon("book-open");
+			item.setTitle(t("brands.bear")).setIcon("book-open");
 			const submenu = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
 			submenu.addItem((sub: MenuItem) =>
 				sub
 					.setTitle(
 						files.length === 1
-							? `Send note to ${BEAR_NAME}`
-							: `Send ${files.length} notes to ${BEAR_NAME}`,
+							? t("commands.sendToBear")
+							: `Send ${files.length} notes to ${t("brands.bear")}`,
 					)
 					.setIcon("upload")
 					.setDisabled(macOnly)
@@ -340,14 +342,14 @@ export default class AdvancedImportExportPlugin extends Plugin {
 			);
 			submenu.addItem((sub: MenuItem) =>
 				sub
-					.setTitle(`Import from ${BEAR_NAME}…`)
+					.setTitle(`${t("commands.importFromBear")}…`)
 					.setIcon("download")
 					.setDisabled(macOnly)
 					.onClick(() => this.importFromBear()),
 			);
 			if (macOnly) {
 				submenu.addItem((sub: MenuItem) =>
-					sub.setTitle(`(${BEAR_NAME} is macOS / iOS only)`).setDisabled(true),
+					sub.setTitle(`(${t("brands.bear")} is macOS / iOS only)`).setDisabled(true),
 				);
 			}
 		});
@@ -360,7 +362,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		if (configs.length === 0) return;
 		for (const config of configs) {
 			const provider = this.registry.get(config.id) as WpsProvider | null;
-			const avail = provider?.available?.() ?? { ok: false, reason: "Enable + trust this provider in Settings" };
+			const avail = provider?.available?.() ?? { ok: false, reason: t("providers.enableInSettings") };
 			menu.addItem((item) => {
 				item.setTitle(config.displayName).setIcon("file-text");
 				const submenu = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
@@ -377,7 +379,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 							try {
 								await this.exportToProvider(config, files);
 							} catch (err) {
-								new Notice(`Export failed: ${errorMessage(err)}`);
+								new Notice(t("notices.exportFailed", { error: errorMessage(err) }));
 							}
 						}),
 				);
@@ -396,7 +398,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		if (configs.length === 0) return;
 		for (const config of configs) {
 			const provider = this.registry.get(config.id) as YoudaoProvider | null;
-			const avail = provider?.available?.() ?? { ok: false, reason: "Enable + trust this provider in Settings" };
+			const avail = provider?.available?.() ?? { ok: false, reason: t("providers.enableInSettings") };
 			menu.addItem((item) => {
 				item.setTitle(config.displayName).setIcon("edit");
 				const submenu = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
@@ -413,7 +415,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 							try {
 								await this.exportToProvider(config, files);
 							} catch (err) {
-								new Notice(`Export failed: ${errorMessage(err)}`);
+								new Notice(t("notices.exportFailed", { error: errorMessage(err) }));
 							}
 						}),
 				);
@@ -432,7 +434,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		if (configs.length === 0) return;
 		for (const config of configs) {
 			const provider = this.registry.get(config.id);
-			const avail = provider?.available?.() ?? { ok: false, reason: "Enable + trust this provider in Settings" };
+			const avail = provider?.available?.() ?? { ok: false, reason: t("providers.enableInSettings") };
 			menu.addItem((item) => {
 				item.setTitle(config.displayName).setIcon("notebook-pen");
 				const submenu = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
@@ -449,7 +451,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 							try {
 								await this.exportToProvider(config, files);
 							} catch (err) {
-								new Notice(`Export failed: ${errorMessage(err)}`);
+								new Notice(t("notices.exportFailed", { error: errorMessage(err) }));
 							}
 						}),
 				);
@@ -477,10 +479,10 @@ export default class AdvancedImportExportPlugin extends Plugin {
 	private async pickYoudaoAndExport(files: TFile[]): Promise<void> {
 		const configs = this.listYoudaoConfigs();
 		if (configs.length === 0) {
-			new Notice(`No ${YOUDAO_NAME} providers configured`);
+			new Notice(t("notices.noProviderConfigured", { provider: YOUDAO_NAME }));
 			return;
 		}
-		const target = configs.length === 1 ? configs[0]! : await this.pickProviderConfig(configs, "Select Youdao provider…");
+		const target = configs.length === 1 ? configs[0]! : await this.pickProviderConfig(configs, t("notices.selectProvider", { provider: YOUDAO_NAME }));
 		if (!target) return;
 		await this.exportToProvider(target, files);
 	}
@@ -494,10 +496,10 @@ export default class AdvancedImportExportPlugin extends Plugin {
 	private async pickFlomoAndExport(files: TFile[]): Promise<void> {
 		const configs = this.listFlomoConfigs();
 		if (configs.length === 0) {
-			new Notice(`No ${FLOMO_NAME} providers configured`);
+			new Notice(t("notices.noProviderConfigured", { provider: FLOMO_NAME }));
 			return;
 		}
-		const target = configs.length === 1 ? configs[0]! : await this.pickProviderConfig(configs, "Select Flomo provider…");
+		const target = configs.length === 1 ? configs[0]! : await this.pickProviderConfig(configs, t("notices.selectProvider", { provider: FLOMO_NAME }));
 		if (!target) return;
 		await this.exportToProvider(target, files);
 	}
@@ -508,12 +510,12 @@ export default class AdvancedImportExportPlugin extends Plugin {
 	): Promise<void> {
 		const provider = this.registry.get(config.id);
 		if (!provider) {
-			new Notice(`${config.displayName} is not enabled or trusted in Settings.`);
+			new Notice(t("notices.providerNotEnabled", { provider: config.displayName }));
 			return;
 		}
 		const avail = provider.available?.() ?? { ok: true };
 		if (!avail.ok) {
-			new Notice(avail.reason ?? "Provider unavailable");
+			new Notice(avail.reason ?? t("notices.providerUnavailable", { provider: config.displayName }));
 			return;
 		}
 		const transformer = this.buildTransformer();
@@ -540,12 +542,12 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		}
 		if (failures.length === 0) {
 			new Notice(
-				`Exported ${succeeded} note${succeeded === 1 ? "" : "s"} to ${config.displayName}`,
+				t("notices.exportedTo", { count: succeeded, s: succeeded === 1 ? "" : "s", provider: config.displayName }),
 			);
 		} else {
 			const firstReason = failures[0]?.error ?? "unknown";
 			new Notice(
-				`${config.displayName}: ${succeeded} succeeded, ${failures.length} failed — ${firstReason}`,
+				t("notices.exportPartialFail", { provider: config.displayName, succeeded, failed: failures.length, reason: firstReason }),
 				12000,
 			);
 		}
@@ -554,10 +556,10 @@ export default class AdvancedImportExportPlugin extends Plugin {
 	private async pickWpsAndExport(files: TFile[]): Promise<void> {
 		const configs = this.listWpsConfigs();
 		if (configs.length === 0) {
-			new Notice(`No ${WPS_NAME} providers configured`);
+			new Notice(t("notices.noProviderConfigured", { provider: WPS_NAME }));
 			return;
 		}
-		const target = configs.length === 1 ? configs[0]! : await this.pickProviderConfig(configs, "Select WPS provider…");
+		const target = configs.length === 1 ? configs[0]! : await this.pickProviderConfig(configs, t("notices.selectProvider", { provider: WPS_NAME }));
 		if (!target) return;
 		await this.exportToProvider(target, files);
 	}

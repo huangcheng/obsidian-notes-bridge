@@ -1,5 +1,6 @@
 import { App, Modal } from "obsidian";
 import { ImportExportSession, SessionEvent } from "../orchestrator/session";
+import { t } from "../i18n";
 
 interface RowState {
 	label: string;

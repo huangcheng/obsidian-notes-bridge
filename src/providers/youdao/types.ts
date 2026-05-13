@@ -13,7 +13,6 @@ export interface YoudaoProviderConfig extends ProviderConfigBase {
 export const DEFAULT_YOUDAO_CONFIG: Omit<YoudaoProviderConfig, "id" | "displayName"> = {
 	kind: "youdao",
 	enabled: true,
-	trusted: false,
 	cliPath: "youdaonote",
 };
 
