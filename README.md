@@ -2,7 +2,7 @@
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
-An [Obsidian](https://obsidian.md) plugin that exports notes as portable Markdown and bridges your vault with other note-taking apps — Bear (via `x-callback-url`), WPS Cloud Note, Youdao Note, and Flomo (via their respective CLI/MCP clients).
+An [Obsidian](https://obsidian.md) plugin that exports notes as portable Markdown and bridges your vault with other note-taking apps — Bear (via `x-callback-url`), WPS Cloud Note, Youdao Note, Flomo, and Yinxiang (印象笔记) (via their respective CLI/MCP/REST clients).
 
 Mobile-safe: stdio MCP transports and Bear are guarded at runtime and degrade gracefully on iOS/Android.
 
@@ -50,6 +50,13 @@ Send notes to Youdao Note via the official `youdaonote` CLI. The plugin can dete
 
 Export memos to Flomo via its official streamable-HTTP MCP server at `https://flomoapp.com/mcp`. Requires a Flomo Pro account and a personal API token, configured per provider in settings. Push-only — Flomo's MCP is a write surface today, so importing memos back into the vault isn't supported.
 
+### Yinxiang (印象笔记)
+
+Export notes to and import notes from Yinxiang via its REST API at `https://app.yinxiang.com`. Authenticate with an OAuth token from the [Yinxiang skills OAuth page](https://app.yinxiang.com/third/skills-oauth/). Supports:
+- **Export** — send notes to a specific notebook or your default notebook
+- **Import** — browse and search your Yinxiang notes, then pull them back into your vault as Markdown
+- **Notebook selection** — choose a default notebook in settings, or the plugin will use your Yinxiang default
+
 ### Context menu
 
 Right-click any file in the file explorer (or select multiple files) to find the **Cross-App Notes Bridge** submenu with all available actions.
@@ -62,7 +69,7 @@ Configure via **Settings → Community plugins → Cross-App Notes Bridge**.
 - **Import folder** — directory for imported notes (default: `Imports`)
 - **Concurrency** — parallel export workers (default: 4)
 - **Transform options** — configure Markdown output format
-- **Providers** — enable, trust, and configure Bear / WPS / Youdao / Flomo independently
+- **Providers** — enable, trust, and configure Bear / WPS / Youdao / Flomo / Yinxiang independently
 
 ## Commands
 
@@ -75,6 +82,7 @@ Configure via **Settings → Community plugins → Cross-App Notes Bridge**.
 | `Send active note to WPS Cloud Note` | Dispatch the active note to a configured WPS provider |
 | `Send active note to Youdao Note` | Dispatch the active note to a configured Youdao provider |
 | `Send active note to Flomo` | Dispatch the active note as a memo to a configured Flomo provider |
+| `Send active note to Yinxiang` | Dispatch the active note to a configured Yinxiang provider |
 
 ## Installation
 
@@ -119,7 +127,7 @@ npm run lint       # run ESLint
 - **No telemetry.** The plugin does not call any analytics, tracking, or "phone home" endpoint.
 - **Credentials stay local.** API keys and provider configuration are stored in your vault's plugin data file (`.obsidian/plugins/advanced-import-export/data.json`) and never leave your machine, except for the explicit calls you trigger to the configured provider (e.g. WPS server endpoint, Youdao CLI subprocess, Bear's URL scheme).
 - **Network calls are scoped to the provider you configure.** Disabling or untrusting a provider stops all calls for that provider.
-- **Outbound URLs:** Bear → `bear://` URL scheme (local IPC, no network); WPS → the server URL or CLI binary you configure; Youdao → the local `youdaonote` CLI (calls Youdao's API on your behalf using the API key you provide it); Flomo → `https://flomoapp.com/mcp` with `Authorization: Bearer <your-token>`.
+- **Outbound URLs:** Bear → `bear://` URL scheme (local IPC, no network); WPS → the server URL or CLI binary you configure; Youdao → the local `youdaonote` CLI (calls Youdao's API on your behalf using the API key you provide it); Flomo → `https://flomoapp.com/mcp` with `Authorization: Bearer <your-token>`; Yinxiang → `https://app.yinxiang.com/third` REST API with `auth: <your-token>`.
 
 ## License
 

@@ -2,7 +2,7 @@
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
-一款 [Obsidian](https://obsidian.md) 插件，把笔记导出为可移植的纯 Markdown，并把你的库与其他笔记应用打通 —— Bear（通过 `x-callback-url`）、WPS 云笔记、有道云笔记、Flomo（分别通过其 CLI / MCP 客户端）。
+一款 [Obsidian](https://obsidian.md) 插件，把笔记导出为可移植的纯 Markdown，并把你的库与其他笔记应用打通 —— Bear（通过 `x-callback-url`）、WPS 云笔记、有道云笔记、Flomo、印象笔记（分别通过其 CLI / MCP / REST 客户端）。
 
 移动端友好：stdio 形式的 MCP 传输和 Bear 协议在运行时被守卫，iOS / Android 上会优雅降级，不会崩溃或报错。
 
@@ -50,6 +50,13 @@
 
 通过 Flomo 官方的 streamable-HTTP MCP 服务（`https://flomoapp.com/mcp`）把 memo 推送到 Flomo。需要 Flomo Pro 账号和一个个人 API Token，每个 Provider 在设置里独立配置。**只支持发送，不支持反向导入** —— Flomo 的 MCP 目前是只写接口，把 memo 拉回库里这条路还没开。
 
+### 印象笔记（Yinxiang）
+
+通过 REST API（`https://app.yinxiang.com`）把笔记发送到印象笔记，或从印象笔记导入回库。用[印象笔记技能 OAuth 页面](https://app.yinxiang.com/third/skills-oauth/)获取 Token 后填入设置即可。支持：
+- **导出** — 发送笔记到指定笔记本或默认笔记本
+- **导入** — 浏览和搜索印象笔记中的笔记，然后以 Markdown 形式拉回库里
+- **笔记本选择** — 在设置里指定默认笔记本，未指定则使用印象笔记的默认笔记本
+
 ### 右键菜单
 
 在文件管理器里右键任意文件（或先多选再右键），就能在 **Cross-App Notes Bridge** 子菜单里找到所有可用动作。
@@ -62,7 +69,7 @@
 - **导入文件夹** —— 导入笔记的目录（默认：`Imports`）
 - **并发数** —— 并行导出 worker 数量（默认：4）
 - **变换选项** —— 配置 Markdown 输出格式
-- **Providers** —— 独立启用、信任、配置 Bear / WPS / 有道 / Flomo
+- **Providers** —— 独立启用、信任、配置 Bear / WPS / 有道 / Flomo / 印象笔记
 
 ## 命令
 
@@ -75,6 +82,7 @@
 | `Send active note to WPS Cloud Note` | 把当前笔记派发到已配置的 WPS Provider |
 | `Send active note to Youdao Note` | 把当前笔记派发到已配置的有道 Provider |
 | `Send active note to Flomo` | 把当前笔记作为 memo 派发到已配置的 Flomo Provider |
+| `Send active note to Yinxiang` | 把当前笔记派发到已配置的印象笔记 Provider |
 
 ## 安装
 
@@ -119,7 +127,7 @@ npm run lint       # 跑 ESLint
 - **零遥测。** 插件不会调用任何统计、追踪或"回家上报"接口。
 - **凭据全部留在本地。** API Key 和 Provider 配置存在库内的插件数据文件（`.obsidian/plugins/advanced-import-export/data.json`），除非你主动触发了到所配置 Provider 的调用（如 WPS 服务端、有道 CLI 子进程、Bear 的 URL Scheme），否则不会离开你的机器。
 - **网络调用范围严格随 Provider 配置而定。** 禁用或取消信任某个 Provider，会停掉它所有的网络调用。
-- **出站地址：** Bear → `bear://` URL Scheme（本地 IPC，不走网络）；WPS → 你配置的服务端 URL 或 CLI 二进制；有道 → 本地的 `youdaonote` CLI（CLI 用你提供的 API Key 替你调用有道 API）；Flomo → `https://flomoapp.com/mcp`，带 `Authorization: Bearer <你的 Token>`。
+- **出站地址：** Bear → `bear://` URL Scheme（本地 IPC，不走网络）；WPS → 你配置的服务端 URL 或 CLI 二进制；有道 → 本地的 `youdaonote` CLI（CLI 用你提供的 API Key 替你调用有道 API）；Flomo → `https://flomoapp.com/mcp`，带 `Authorization: Bearer <你的 Token>`；印象笔记 → `https://app.yinxiang.com/third` REST API，带 `auth: <你的 Token>`。
 
 ## 许可证
 
