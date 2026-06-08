@@ -20,6 +20,17 @@ import {
 } from "../providers/youdao/types";
 
 /**
+ * Lucide icon SVGs for provider cards.
+ */
+const PROVIDER_ICONS: Record<string, string> = {
+	bear: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,
+	wps: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>`,
+	youdao: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+	flomo: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/></svg>`,
+	yinxiang: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v8l3-3 3 3V2"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg>`,
+};
+
+/**
  * Settings tab. Sections grow as adapters land — for the foundation we
  * expose the transform toggles, default export destination, concurrency,
  * developer log, and a placeholder for providers (UI lives in
@@ -34,10 +45,14 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setHeading().setName(t("settings.heading.transforms"));
+		// ---------- Transforms Section ----------
+		const transformsSection = containerEl.createDiv({ cls: "aie-settings-section" });
+		new Setting(transformsSection).setHeading().setName(t("settings.heading.transforms"));
 		const xf = this.plugin.settings.transform;
 
-		new Setting(containerEl)
+		const transformsCard = transformsSection.createDiv({ cls: "aie-section-card" });
+
+		new Setting(transformsCard)
 			.setName(t("settings.labels.resolveWikilinks"))
 			.setDesc(t("settings.descriptions.resolveWikilinks"))
 			.addToggle((tog) =>
@@ -47,7 +62,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				}),
 			);
 
-		new Setting(containerEl)
+		new Setting(transformsCard)
 			.setName(t("settings.labels.embedHandling"))
 			.setDesc(t("settings.descriptions.embedHandling"))
 			.addDropdown((dd) =>
@@ -64,7 +79,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl)
+		new Setting(transformsCard)
 			.setName(t("settings.labels.flattenCallouts"))
 			.setDesc(t("settings.descriptions.flattenCallouts"))
 			.addToggle((tog) =>
@@ -74,7 +89,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				}),
 			);
 
-		new Setting(containerEl)
+		new Setting(transformsCard)
 			.setName(t("settings.labels.dropFrontmatter"))
 			.setDesc(t("settings.descriptions.dropFrontmatter"))
 			.addToggle((tog) =>
@@ -84,7 +99,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				}),
 			);
 
-		new Setting(containerEl)
+		new Setting(transformsCard)
 			.setName(t("settings.labels.attachmentLinks"))
 			.setDesc(t("settings.descriptions.attachmentLinks"))
 			.addDropdown((dd) =>
@@ -101,9 +116,13 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl).setHeading().setName(t("settings.heading.fileLocations"));
+		// ---------- File Locations Section ----------
+		const fileSection = containerEl.createDiv({ cls: "aie-settings-section" });
+		new Setting(fileSection).setHeading().setName(t("settings.heading.fileLocations"));
 
-		new Setting(containerEl)
+		const fileCard = fileSection.createDiv({ cls: "aie-section-card" });
+
+		new Setting(fileCard)
 			.setName(t("settings.labels.defaultExportFolder"))
 			.setDesc(t("settings.descriptions.defaultExportFolder"))
 			.addText((text) =>
@@ -116,7 +135,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl)
+		new Setting(fileCard)
 			.setName(t("settings.labels.defaultImportFolder"))
 			.setDesc(t("settings.descriptions.defaultImportFolder"))
 			.addText((text) =>
@@ -129,7 +148,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl)
+		new Setting(fileCard)
 			.setName(t("settings.labels.concurrency"))
 			.setDesc(t("settings.descriptions.concurrency"))
 			.addText((text) =>
@@ -144,7 +163,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl)
+		new Setting(fileCard)
 			.setName(t("settings.labels.developerLog"))
 			.setDesc(t("settings.descriptions.developerLog"))
 			.addToggle((tog) =>
@@ -154,8 +173,11 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				}),
 			);
 
-		new Setting(containerEl).setHeading().setName(t("settings.heading.providers"));
-		containerEl.createEl("p", {
+		// ---------- Providers Section ----------
+		const providersSection = containerEl.createDiv({ cls: "aie-settings-section aie-providers-section" });
+		new Setting(providersSection).setHeading().setName(t("settings.heading.providers"));
+		providersSection.createEl("p", {
+			cls: "aie-providers-intro",
 			text: t("settings.providerIntro", {
 				bear: t("brands.bear"),
 				wps: t("brands.wps"),
@@ -165,8 +187,9 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			}),
 		});
 
+		const providersList = providersSection.createDiv({ cls: "aie-providers-list" });
 		for (const cfg of this.plugin.settings.providers) {
-			this.renderProviderCard(containerEl, cfg);
+			this.renderProviderCard(providersList, cfg);
 		}
 	}
 
@@ -194,22 +217,34 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 		}
 	}
 
-	/**
-	 * Wrap a provider card in a native <details> element so users can
-	 * expand it. All providers start collapsed by default.
-	 */
 	private openCollapsibleCard(
 		parentEl: HTMLElement,
 		title: string,
 		config: ProviderConfigBase,
 	): HTMLElement {
-		const details = parentEl.createEl("details", { cls: "aie-provider-card" });
+		const details = parentEl.createEl("details", {
+			cls: "aie-provider-card",
+			attr: { "data-kind": config.kind, "data-enabled": String(config.enabled) },
+		});
 		details.open = false;
+
 		const summary = details.createEl("summary");
-		summary.createEl("strong", { text: title });
-		if (!config.enabled) {
-			summary.appendText(" — disabled");
-		}
+
+		// Left side: icon + title
+		const summaryContent = summary.createDiv({ cls: "aie-provider-summary-content" });
+
+		// Brand icon
+		const iconWrapper = summaryContent.createDiv({ cls: "aie-provider-icon" });
+		iconWrapper.innerHTML = (PROVIDER_ICONS[config.kind] ?? PROVIDER_ICONS.bear) as string;
+
+		// Title
+		const info = summaryContent.createDiv({ cls: "aie-provider-info" });
+		info.createDiv({ cls: "aie-provider-title", text: title });
+
+		// Expand chevron
+		const expandIcon = summary.createSpan({ cls: "aie-provider-expand-icon" });
+		expandIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+
 		return details.createDiv({ cls: "aie-provider-body" });
 	}
 
@@ -714,5 +749,4 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				}),
 			);
 	}
-
 }

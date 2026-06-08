@@ -1,19 +1,355 @@
-/*
+/* ============================================
+   Cross-App Notes Bridge — Settings Styles
+   ============================================ */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
-
-.aie-provider-card {
-	margin-bottom: 1em;
-	padding: 0.5em 0.75em;
-	border-top: 1px solid var(--background-modifier-border);
+/* ---------- Section Layout ---------- */
+.aie-settings-section {
+	margin-bottom: 2.5rem;
 }
 
+.aie-settings-section > .setting-item-heading {
+	margin-bottom: 1rem;
+	padding-bottom: 0.5rem;
+	border-bottom: 2px solid var(--background-modifier-border);
+}
+
+.aie-settings-section > .setting-item-heading .setting-item-name {
+	font-size: 1.15em;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	color: var(--text-normal);
+}
+
+/* ---------- Providers Section ---------- */
+.aie-providers-intro {
+	margin: 0 0 1.25rem 0;
+	color: var(--text-muted);
+	font-size: 0.9em;
+	line-height: 1.6;
+}
+
+.aie-providers-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+}
+
+/* ---------- Provider Cards ---------- */
+.aie-provider-card {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 10px;
+	background: var(--background-primary);
+	overflow: hidden;
+	transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+.aie-provider-card:hover {
+	border-color: var(--background-modifier-border-hover);
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+	transform: translateY(-1px);
+}
+
+.aie-provider-card[open] {
+	border-color: var(--background-modifier-border-hover);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Disabled provider cards get a muted look */
+.aie-provider-card[data-enabled="false"] {
+	opacity: 0.7;
+}
+
+.aie-provider-card[data-enabled="false"]:hover {
+	opacity: 1;
+}
+
+/* Provider accent colors (left border + icon background tint) */
+.aie-provider-card[data-kind="bear"] {
+	--provider-accent: hsl(32, 85%, 55%);
+	--provider-accent-bg: hsla(32, 85%, 55%, 0.1);
+	--provider-accent-hover: hsla(32, 85%, 55%, 0.15);
+	border-left: 3px solid var(--provider-accent);
+}
+
+.aie-provider-card[data-kind="wps"] {
+	--provider-accent: hsl(0, 80%, 58%);
+	--provider-accent-bg: hsla(0, 80%, 58%, 0.1);
+	--provider-accent-hover: hsla(0, 80%, 58%, 0.15);
+	border-left: 3px solid var(--provider-accent);
+}
+
+.aie-provider-card[data-kind="youdao"] {
+	--provider-accent: hsl(210, 85%, 55%);
+	--provider-accent-bg: hsla(210, 85%, 55%, 0.1);
+	--provider-accent-hover: hsla(210, 85%, 55%, 0.15);
+	border-left: 3px solid var(--provider-accent);
+}
+
+.aie-provider-card[data-kind="flomo"] {
+	--provider-accent: hsl(160, 70%, 42%);
+	--provider-accent-bg: hsla(160, 70%, 42%, 0.1);
+	--provider-accent-hover: hsla(160, 70%, 42%, 0.15);
+	border-left: 3px solid var(--provider-accent);
+}
+
+.aie-provider-card[data-kind="yinxiang"] {
+	--provider-accent: hsl(145, 70%, 38%);
+	--provider-accent-bg: hsla(145, 70%, 38%, 0.1);
+	--provider-accent-hover: hsla(145, 70%, 38%, 0.15);
+	border-left: 3px solid var(--provider-accent);
+}
+
+/* ---------- Card Header / Summary ---------- */
 .aie-provider-card summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 1rem 1.25rem;
 	cursor: pointer;
-	padding: 0.25em 0;
+	user-select: none;
+	list-style: none;
+	transition: background-color 0.15s ease;
+}
+
+.aie-provider-card summary::-webkit-details-marker {
+	display: none;
+}
+
+.aie-provider-card summary:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.aie-provider-card summary:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: -2px;
+}
+
+/* Summary content (icon + title + status) */
+.aie-provider-summary-content {
+	display: flex;
+	align-items: center;
+	gap: 0.875rem;
+	flex: 1;
+	min-width: 0;
+}
+
+/* Provider icon wrapper */
+.aie-provider-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: 10px;
+	background: var(--provider-accent-bg);
+	color: var(--provider-accent);
+	flex-shrink: 0;
+	transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.aie-provider-card:hover .aie-provider-icon {
+	background: var(--provider-accent-hover);
+	transform: scale(1.05);
+}
+
+.aie-provider-icon svg {
+	width: 1.25rem;
+	height: 1.25rem;
+	stroke-width: 2;
+}
+
+/* Provider info wrapper (title container) */
+.aie-provider-info {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+}
+
+/* Provider title */
+.aie-provider-title {
+	font-weight: 600;
+	font-size: 0.95rem;
+	color: var(--text-normal);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* ---------- Expand / Collapse Chevron ---------- */
+.aie-provider-expand-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	color: var(--text-muted);
+	transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease;
+	flex-shrink: 0;
+}
+
+.aie-provider-card[open] .aie-provider-expand-icon {
+	transform: rotate(180deg);
+	color: var(--text-normal);
+}
+
+/* ---------- Provider Body ---------- */
+.aie-provider-body {
+	border-top: 1px solid var(--background-modifier-border);
+	background: var(--background-primary-alt);
+}
+
+/* ---------- Settings within Cards ---------- */
+.aie-provider-body > .setting-item {
+	padding: 0.875rem 1.25rem;
+	margin: 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	transition: background-color 0.15s ease;
+}
+
+.aie-provider-body > .setting-item:last-child {
+	border-bottom: none;
+}
+
+.aie-provider-body > .setting-item:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+/* Setting item name and description within cards */
+.aie-provider-body .setting-item-name {
+	font-weight: 500;
+	font-size: 0.9em;
+}
+
+.aie-provider-body .setting-item-description {
+	font-size: 0.82em;
+	color: var(--text-muted);
+	line-height: 1.4;
+}
+
+/* ---------- Intro Paragraphs inside Cards ---------- */
+.aie-provider-body > p {
+	margin: 0;
+	padding: 0.875rem 1.25rem;
+	color: var(--text-muted);
+	font-size: 0.85em;
+	line-height: 1.6;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.aie-provider-body > p a {
+	color: var(--text-accent);
+	text-decoration: none;
+	font-weight: 500;
+	transition: opacity 0.15s ease;
+}
+
+.aie-provider-body > p a:hover {
+	opacity: 0.8;
+	text-decoration: underline;
+}
+
+/* ---------- Buttons in Provider Cards ---------- */
+.aie-provider-body .setting-item-control button {
+	transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.aie-provider-body .setting-item-control button:hover {
+	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+	transform: translateY(-1px);
+}
+
+.aie-provider-body .setting-item-control button:active {
+	transform: translateY(0);
+}
+
+/* ---------- Toggle Enhancement ---------- */
+.aie-provider-body .checkbox-container {
+	transition: background-color 0.2s ease;
+}
+
+/* ---------- Inputs and Selects ---------- */
+.aie-provider-body input[type="text"],
+.aie-provider-body input[type="password"],
+.aie-provider-body textarea,
+.aie-provider-body select {
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.aie-provider-body input[type="text"]:focus,
+.aie-provider-body input[type="password"]:focus,
+.aie-provider-body textarea:focus,
+.aie-provider-body select:focus {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 3px var(--background-modifier-border-focus);
+}
+
+/* ---------- Textarea in Cards ---------- */
+.aie-provider-body textarea {
+	font-family: var(--font-monospace);
+	font-size: 0.85em;
+	min-height: 4rem;
+}
+
+/* ---------- Dropdown in Cards ---------- */
+.aie-provider-body select {
+	cursor: pointer;
+}
+
+/* ---------- Section Card ---------- */
+.aie-section-card {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 10px;
+	background: var(--background-primary);
+	overflow: hidden;
+}
+
+.aie-settings-section > .setting-item-heading {
+	margin-bottom: 0.75rem;
+	border-bottom: none;
+}
+
+/* ---------- General Settings (non-provider) ---------- */
+.aie-section-card > .setting-item {
+	padding: 0.625rem 1rem;
+	margin: 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.aie-section-card > .setting-item:last-of-type {
+	border-bottom: none;
+}
+
+.aie-section-card > .setting-item:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+/* ---------- Accessibility: Reduced Motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+	.aie-provider-card,
+	.aie-provider-card summary,
+	.aie-provider-expand-icon,
+	.aie-provider-icon,
+	.aie-provider-body > .setting-item,
+	.aie-provider-body .setting-item-control button,
+	.aie-provider-body input,
+	.aie-provider-body textarea,
+	.aie-provider-body select {
+		transition: none !important;
+	}
+
+	.aie-provider-card:hover,
+	.aie-provider-card[open] {
+		transform: none;
+	}
+
+	.aie-provider-card:hover .aie-provider-icon {
+		transform: none;
+	}
+
+	.aie-provider-body .setting-item-control button:hover {
+		transform: none;
+	}
 }
