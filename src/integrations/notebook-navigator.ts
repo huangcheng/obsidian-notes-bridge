@@ -37,8 +37,8 @@ class MenuAdapter {
  * Try to get the Notebook Navigator API if the plugin is installed and enabled.
  */
 function getNotebookNavigatorAPI(app: import("obsidian").App): NNAPI | undefined {
-	const plugins = (app as any).plugins?.plugins as Record<string, any> | undefined;
-	return plugins?.["notebook-navigator"]?.api as NNAPI | undefined;
+	const plugins = (app as { plugins?: { plugins?: Record<string, { api?: NNAPI }> } }).plugins?.plugins;
+	return plugins?.["notebook-navigator"]?.api;
 }
 
 /**
@@ -51,19 +51,19 @@ function registerNNFileMenu(
 ): (() => void) | undefined {
 	if (!nn.menus?.registerFileMenu) return undefined;
 
-	const dispose = nn.menus.registerFileMenu(({ addItem, file, selection }) => {
+	const dispose = nn.menus.registerFileMenu((ctx) => {
 		// Build a NoteSelection from NN's context
-		const files = selection.files ?? [file];
+		const files = ctx.selection.files ?? [ctx.file];
 		const notes = files.filter((f: TFile) => f.extension === "md");
 		if (notes.length === 0) return;
 
 		const sel: NoteSelection = {
-			source: selection.mode === "multiple" ? "files-menu" : "file-menu",
+			source: ctx.selection.mode === "multiple" ? "files-menu" : "file-menu",
 			notes,
 		};
 
 		// Wrap NN's addItem into a Menu-like adapter
-		const adapter = new MenuAdapter(addItem);
+		const adapter = new MenuAdapter(ctx.addItem.bind(ctx));
 		plugin.addPluginSubmenu(adapter as unknown as Menu, sel);
 	});
 

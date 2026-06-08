@@ -8,6 +8,8 @@ export default tseslint.config(
 		languageOptions: {
 			globals: {
 				...globals.browser,
+				activeWindow: "readonly",
+				activeDocument: "readonly",
 			},
 			parserOptions: {
 				projectService: {
@@ -41,7 +43,7 @@ export default tseslint.config(
 					"IntelliJ IDEA", "WebStorm", "PyCharm",
 					// Project-specific brands
 					"Bear", "WPS", "WPS Note", "WPS Cloud Note", "Youdao", "Youdao Note",
-					"MCP", "Advanced Import/Export", "macOS", "iOS", "Flomo",
+					"MCP", "Advanced Import/Export", "macOS", "iOS", "Flomo", "OAuth",
 				],
 			}],
 		},

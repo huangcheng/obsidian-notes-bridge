@@ -4,6 +4,9 @@
 	"description": "Obsidian plugin for portable Markdown export, Bear bridge, and pluggable CLI/MCP/HTTP import-export providers.",
 	"main": "main.js",
 	"type": "module",
+	"pnpm": {
+		"onlyBuiltDependencies": ["esbuild"]
+	},
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
