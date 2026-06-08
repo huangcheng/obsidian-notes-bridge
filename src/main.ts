@@ -8,7 +8,8 @@ import { writeImportedNote } from "./providers/bear/import";
 import { bearAvailable, parseBearInput } from "./providers/bear/url-scheme";
 import { FlomoProviderConfig } from "./providers/flomo/types";
 import { registerAllFactories } from "./providers/factories";
-import { ProviderRegistry } from "./providers/registry";
+import { Provider } from "./providers/provider";
+import { ProviderConfigBase, ProviderRegistry } from "./providers/registry";
 import { WpsProvider } from "./providers/wps/wps-provider";
 import { WpsProviderConfig } from "./providers/wps/types";
 import { YoudaoProvider } from "./providers/youdao/youdao-provider";
@@ -22,6 +23,44 @@ import { MarkdownTransformer } from "./transforms/transformer";
 import { FLOMO_NAME, WPS_NAME, YOUDAO_NAME, YINXIANG_NAME } from "./ui/brand-names";
 import { ExportConfirmModal } from "./ui/export-confirm-modal";
 import { BearImportModal } from "./ui/bear-import-modal";
+import { tryRegisterNotebookNavigatorMenus } from "./integrations/notebook-navigator";
+
+/**
+ * Robust submenu creation that works across Obsidian versions.
+ * Based on Notebook Navigator's tryCreateSubmenu pattern.
+ * Obsidian's MenuItem.setSubmenu has two different API signatures:
+ * - Setter style: item.setSubmenu(menu) — takes a Menu as argument
+ * - Getter style: item.setSubmenu() — creates and returns a Menu
+ */
+function tryCreateSubmenu(item: MenuItem): Menu | null {
+	const maybeItem = item as MenuItem & { setSubmenu?: (...args: unknown[]) => unknown };
+	if (typeof maybeItem.setSubmenu !== "function") {
+		return null;
+	}
+
+	// Try setter style first (newer Obsidian)
+	if (maybeItem.setSubmenu.length > 0) {
+		const submenu = new Menu();
+		try {
+			maybeItem.setSubmenu(submenu);
+			return submenu;
+		} catch {
+			// fall through to getter style
+		}
+	}
+
+	// Try getter style (older Obsidian)
+	try {
+		const maybeMenu = maybeItem.setSubmenu() as Menu | undefined;
+		if (maybeMenu && typeof maybeMenu.addItem === "function") {
+			return maybeMenu;
+		}
+	} catch {
+		// ignore
+	}
+
+	return null;
+}
 
 export default class AdvancedImportExportPlugin extends Plugin {
 	settings!: PluginSettings;
@@ -78,6 +117,9 @@ export default class AdvancedImportExportPlugin extends Plugin {
 				this.addPluginSubmenu(menu, sel);
 			}),
 		);
+
+		// Register with Notebook Navigator's context menus if installed
+		tryRegisterNotebookNavigatorMenus(this);
 
 		this.addSettingTab(new AdvancedImportExportSettingTab(this.app, this));
 
@@ -312,206 +354,134 @@ export default class AdvancedImportExportPlugin extends Plugin {
 	}
 
 
-	private addPluginSubmenu(menu: Menu, selection: NoteSelection): void {
+	/**
+	 * Add the plugin submenu to a context menu.
+	 * Uses only 2 levels of nesting to avoid Obsidian's sub-sub-menu bug
+	 * (https://forum.obsidian.md/t/bug-sub-sub-menus-do-not-behave-correctly/74618).
+	 *
+	 * Items are added dynamically based on:
+	 * 1. The provider is valid (registered factory, provider can be created)
+	 * 2. The provider is enabled in settings
+	 */
+	addPluginSubmenu(menu: Menu, selection: NoteSelection): void {
 		const { notes } = selection;
 		if (notes.length === 0) return;
 
+		// Collect all valid+enabled providers upfront
+		const entries = this.buildMenuEntries();
+		if (entries.length === 0 && notes.length > 1) return;
+
 		menu.addItem((item) => {
 			item.setTitle(t("brands.plugin")).setIcon("lucide-arrow-left-right");
-			const sub = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
+			const sub = tryCreateSubmenu(item);
+
+			if (!sub) return;
 
 			if (notes.length === 1) {
 				sub.addItem((s) =>
 					s
 						.setTitle(t("commands.copyAsMarkdown"))
 						.setIcon("clipboard-copy")
+						.setSection("built-in")
 						.onClick(() => void this.copyAsPureMarkdown(selection)),
 				);
 			}
 
-			this.addBearSubmenu(sub, notes);
-			this.addWpsSubmenus(sub, notes);
-			this.addYoudaoSubmenus(sub, notes);
-			this.addFlomoSubmenus(sub, notes);
-			this.addYinxiangSubmenus(sub, notes);
-		});
-	}
-
-	private addBearSubmenu(menu: Menu, files: TFile[]): void {
-		if (files.length === 0) return;
-		const macOnly = !bearAvailable();
-		menu.addItem((item) => {
-			item.setTitle(t("brands.bear")).setIcon("book-open");
-			const submenu = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
-			submenu.addItem((sub: MenuItem) =>
-				sub
-					.setTitle(
-						files.length === 1
-							? t("commands.sendToBear")
-							: `Send ${files.length} notes to ${t("brands.bear")}`,
-					)
-					.setIcon("upload")
-					.setDisabled(macOnly)
-					.onClick(() => void this.exportToBear(files)),
-			);
-			submenu.addItem((sub: MenuItem) =>
-				sub
-					.setTitle(`${t("commands.importFromBear")}…`)
-					.setIcon("download")
-					.setDisabled(macOnly)
-					.onClick(() => this.importFromBear()),
-			);
-			if (macOnly) {
-				submenu.addItem((sub: MenuItem) =>
-					sub.setTitle(`(${t("brands.bear")} is macOS / iOS only)`).setDisabled(true),
-				);
+			if (entries.length > 0) {
+				this.populateSubmenu(sub, entries, notes);
 			}
 		});
 	}
 
+	/**
+	 * Build the list of menu entries from enabled, valid providers.
+	 */
+	private buildMenuEntries(): MenuEntry[] {
+		const entries: MenuEntry[] = [];
 
-	private addWpsSubmenus(menu: Menu, files: TFile[]): void {
-		if (files.length === 0) return;
-		const configs = this.listWpsConfigs();
-		if (configs.length === 0) return;
-		for (const config of configs) {
-			const provider = this.registry.get(config.id) as WpsProvider | null;
-			const avail = provider?.available?.() ?? { ok: false, reason: t("providers.enableInSettings") };
-			menu.addItem((item) => {
-				item.setTitle(config.displayName).setIcon("file-text");
-				const submenu = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
-				submenu.addItem((sub: MenuItem) =>
-					sub
-						.setTitle(
-							files.length === 1
-								? `Export note to ${config.displayName}`
-								: `Export ${files.length} notes to ${config.displayName}`,
-						)
-						.setIcon("upload")
-						.setDisabled(!avail.ok)
-						.onClick(async () => {
-							try {
-								await this.exportToProvider(config, files);
-							} catch (err) {
-								new Notice(t("notices.exportFailed", { error: errorMessage(err) }));
-							}
-						}),
-				);
-				if (!avail.ok && avail.reason) {
-					submenu.addItem((sub: MenuItem) =>
-						sub.setTitle(`(${avail.reason})`).setDisabled(true),
-					);
-				}
-			});
-		}
-	}
+		for (const config of this.settings.providers) {
+			if (config.enabled === false) continue;
 
-	private addYoudaoSubmenus(menu: Menu, files: TFile[]): void {
-		if (files.length === 0) return;
-		const configs = this.listYoudaoConfigs();
-		if (configs.length === 0) return;
-		for (const config of configs) {
-			const provider = this.registry.get(config.id) as YoudaoProvider | null;
-			const avail = provider?.available?.() ?? { ok: false, reason: t("providers.enableInSettings") };
-			menu.addItem((item) => {
-				item.setTitle(config.displayName).setIcon("edit");
-				const submenu = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
-				submenu.addItem((sub: MenuItem) =>
-					sub
-						.setTitle(
-							files.length === 1
-								? `Export note to ${config.displayName}`
-								: `Export ${files.length} notes to ${config.displayName}`,
-						)
-						.setIcon("upload")
-						.setDisabled(!avail.ok)
-						.onClick(async () => {
-							try {
-								await this.exportToProvider(config, files);
-							} catch (err) {
-								new Notice(t("notices.exportFailed", { error: errorMessage(err) }));
-							}
-						}),
-				);
-				if (!avail.ok && avail.reason) {
-					submenu.addItem((sub: MenuItem) =>
-						sub.setTitle(`(${avail.reason})`).setDisabled(true),
-					);
-				}
-			});
-		}
-	}
-
-	private addFlomoSubmenus(menu: Menu, files: TFile[]): void {
-		if (files.length === 0) return;
-		const configs = this.listFlomoConfigs();
-		if (configs.length === 0) return;
-		for (const config of configs) {
 			const provider = this.registry.get(config.id);
-			const avail = provider?.available?.() ?? { ok: false, reason: t("providers.enableInSettings") };
-			menu.addItem((item) => {
-				item.setTitle(config.displayName).setIcon("notebook-pen");
-				const submenu = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
-				submenu.addItem((sub: MenuItem) =>
-					sub
+			// registry.get() returns null if no factory, not enabled, or creation fails
+			if (!provider) continue;
+
+			const avail = provider.available?.() ?? { ok: true };
+			// Skip providers that aren't available in the current environment
+			if (!avail.ok) continue;
+
+			const icon = provider.icon ?? providerIcon(config.kind);
+
+			entries.push({
+				config,
+				provider,
+				avail,
+				icon,
+			});
+		}
+
+		return entries;
+	}
+
+	/**
+	 * Populate the plugin submenu with flat items for each provider entry.
+	 * Uses setSection() per provider for visual grouping and separators between providers.
+	 */
+	private populateSubmenu(menu: Menu, entries: MenuEntry[], files: TFile[]): void {
+		let first = true;
+		for (const entry of entries) {
+			const { config, icon } = entry;
+
+			if (!first) menu.addSeparator();
+			first = false;
+
+			if (config.kind === "bear") {
+				this.addBearFlatItems(menu, files);
+			} else {
+				menu.addItem((item) =>
+					item
 						.setTitle(
 							files.length === 1
 								? `Export note to ${config.displayName}`
 								: `Export ${files.length} notes to ${config.displayName}`,
 						)
-						.setIcon("upload")
-						.setDisabled(!avail.ok)
+						.setIcon(icon)
+						.setSection(config.id)
 						.onClick(async () => {
 							try {
-								await this.exportToProvider(config, files);
+								await this.exportToProvider(config as WpsProviderConfig | YoudaoProviderConfig | FlomoProviderConfig | YinxiangProviderConfig, files);
 							} catch (err) {
 								new Notice(t("notices.exportFailed", { error: errorMessage(err) }));
 							}
 						}),
 				);
-				if (!avail.ok && avail.reason) {
-					submenu.addItem((sub: MenuItem) =>
-						sub.setTitle(`(${avail.reason})`).setDisabled(true),
-					);
-				}
-			});
+			}
 		}
 	}
 
-	private addYinxiangSubmenus(menu: Menu, files: TFile[]): void {
-		if (files.length === 0) return;
-		const configs = this.listYinxiangConfigs();
-		if (configs.length === 0) return;
-		for (const config of configs) {
-			const provider = this.registry.get(config.id);
-			const avail = provider?.available?.() ?? { ok: false, reason: t("providers.enableInSettings") };
-			menu.addItem((item) => {
-				item.setTitle(config.displayName).setIcon("book-marked");
-				const submenu = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
-				submenu.addItem((sub: MenuItem) =>
-					sub
-						.setTitle(
-							files.length === 1
-								? `Export note to ${config.displayName}`
-								: `Export ${files.length} notes to ${config.displayName}`,
-						)
-						.setIcon("upload")
-						.setDisabled(!avail.ok)
-						.onClick(async () => {
-							try {
-								await this.exportToProvider(config, files);
-							} catch (err) {
-								new Notice(t("notices.exportFailed", { error: errorMessage(err) }));
-							}
-						}),
-				);
-				if (!avail.ok && avail.reason) {
-					submenu.addItem((sub: MenuItem) =>
-						sub.setTitle(`(${avail.reason})`).setDisabled(true),
-					);
-				}
-			});
-		}
+	/**
+	 * Add flat Bear items (export + import) to the submenu.
+	 */
+	private addBearFlatItems(menu: Menu, files: TFile[]): void {
+		menu.addItem((item) =>
+			item
+				.setTitle(
+					files.length === 1
+						? t("commands.sendToBear")
+						: `Send ${files.length} notes to ${t("brands.bear")}`,
+				)
+				.setIcon("upload")
+				.setSection("bear")
+				.onClick(() => void this.exportToBear(files)),
+		);
+
+		menu.addItem((item) =>
+			item
+				.setTitle(`${t("commands.importFromBear")}…`)
+				.setIcon("download")
+				.setSection("bear")
+				.onClick(() => this.importFromBear()),
+		);
 	}
 
 	private listWpsConfigs(): WpsProviderConfig[] {
@@ -604,7 +574,9 @@ export default class AdvancedImportExportPlugin extends Plugin {
 			} catch (err) {
 				const msg = errorMessage(err);
 				failures.push({ file, error: msg });
-				console.warn(`[${config.kind}] export failed for ${file.path}:`, err);
+				if (this.settings.developerLog) {
+					console.warn(`[${config.kind}] export failed for ${file.path}:`, err);
+				}
 			}
 		}
 		if (failures.length === 0) {
@@ -665,4 +637,21 @@ export default class AdvancedImportExportPlugin extends Plugin {
 
 function errorMessage(err: unknown): string {
 	return err instanceof Error ? err.message : String(err);
+}
+
+function providerIcon(kind: string): string {
+	switch (kind) {
+		case "wps": return "file-text";
+		case "youdao": return "edit";
+		case "flomo": return "notebook-pen";
+		case "yinxiang": return "book-marked";
+		default: return "export";
+	}
+}
+
+interface MenuEntry {
+	config: ProviderConfigBase;
+	provider: Provider;
+	avail: { ok: boolean; reason?: string };
+	icon: string;
 }

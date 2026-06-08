@@ -31,7 +31,6 @@ function getValue(obj: unknown, path: string): string | undefined {
 export function t(key: TranslationKey, params?: Record<string, string | number>): string {
 	let value = getValue(currentLocale, key) ?? getValue(en, key);
 	if (value === undefined) {
-		console.warn(`[i18n] Missing translation key: ${key}`);
 		return key;
 	}
 	if (params) {

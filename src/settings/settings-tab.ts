@@ -30,6 +30,17 @@ const PROVIDER_ICONS: Record<string, string> = {
 	yinxiang: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v8l3-3 3 3V2"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg>`,
 };
 
+const CHEVRON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+
+/**
+ * Safely parse an SVG string into a DOM element using DOMParser
+ * instead of innerHTML, per Obsidian's security guidelines.
+ */
+function parseSvg(svgString: string): SVGSVGElement {
+	const doc = new DOMParser().parseFromString(svgString, "image/svg+xml");
+	return doc.documentElement as unknown as SVGSVGElement;
+}
+
 /**
  * Settings tab. Sections grow as adapters land — for the foundation we
  * expose the transform toggles, default export destination, concurrency,
@@ -235,7 +246,8 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 
 		// Brand icon
 		const iconWrapper = summaryContent.createDiv({ cls: "aie-provider-icon" });
-		iconWrapper.innerHTML = (PROVIDER_ICONS[config.kind] ?? PROVIDER_ICONS.bear) as string;
+		const iconSvg = PROVIDER_ICONS[config.kind] ?? PROVIDER_ICONS["bear"];
+		if (iconSvg) iconWrapper.appendChild(parseSvg(iconSvg));
 
 		// Title
 		const info = summaryContent.createDiv({ cls: "aie-provider-info" });
@@ -243,7 +255,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 
 		// Expand chevron
 		const expandIcon = summary.createSpan({ cls: "aie-provider-expand-icon" });
-		expandIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+		expandIcon.appendChild(parseSvg(CHEVRON_SVG));
 
 		return details.createDiv({ cls: "aie-provider-body" });
 	}
