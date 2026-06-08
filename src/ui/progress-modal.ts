@@ -91,9 +91,9 @@ export class ProgressModal extends Modal {
 		this.listEl.empty();
 		this.rows.forEach((row, idx) => {
 			const li = this.listEl.createEl("li");
-			li.createEl("span", { text: this.statusGlyph(row.status), cls: `aie-status aie-${row.status}` });
-			li.createEl("span", { text: ` ${row.label}` });
-			if (row.detail) li.createEl("span", { text: ` — ${row.detail}`, cls: "aie-row-detail" });
+			li.createSpan({ text: this.statusGlyph(row.status), cls: `aie-status aie-${row.status}` });
+			li.createSpan({ text: ` ${row.label}` });
+			if (row.detail) li.createSpan({ text: ` — ${row.detail}`, cls: "aie-row-detail" });
 			(li as HTMLElement).dataset.index = String(idx);
 		});
 	}

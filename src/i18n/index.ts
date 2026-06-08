@@ -35,7 +35,7 @@ export function t(key: TranslationKey, params?: Record<string, string | number>)
 	}
 	if (params) {
 		return value.replace(/\{\{(\w+)\}\}/g, (_, paramKey: string) => {
-			const paramValue = params[paramKey];
+			const paramValue: string | number | undefined = params[paramKey];
 			return paramValue !== undefined ? String(paramValue) : `{{${paramKey}}}`;
 		});
 	}

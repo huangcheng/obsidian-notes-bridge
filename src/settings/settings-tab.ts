@@ -608,7 +608,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName(t("settings.labels.apiKey"))
-			.setDesc("Paste the token starting with S=s from the OAuth page above.")
+			.setDesc("Paste the token from the OAuth page above.")
 			.addText((text) => {
 				text.inputEl.type = "password";
 				text.setValue(config.apiKey ?? "").onChange(async (v) => {
