@@ -13,12 +13,13 @@ import { WpsProvider } from "./providers/wps/wps-provider";
 import { WpsProviderConfig } from "./providers/wps/types";
 import { YoudaoProvider } from "./providers/youdao/youdao-provider";
 import { YoudaoProviderConfig } from "./providers/youdao/types";
+import { YinxiangProviderConfig } from "./providers/yinxiang/types";
 import { selectionFromActiveEditor, selectionFromFileMenu, selectionFromFiles } from "./selection/builders";
 import { NoteSelection } from "./selection/note-selection";
 import { applyDefaultProviderMigration, DEFAULT_SETTINGS, PluginSettings } from "./settings";
 import { AdvancedImportExportSettingTab } from "./settings/settings-tab";
 import { MarkdownTransformer } from "./transforms/transformer";
-import { FLOMO_NAME, WPS_NAME, YOUDAO_NAME } from "./ui/brand-names";
+import { FLOMO_NAME, WPS_NAME, YOUDAO_NAME, YINXIANG_NAME } from "./ui/brand-names";
 import { ExportConfirmModal } from "./ui/export-confirm-modal";
 import { BearImportModal } from "./ui/bear-import-modal";
 
@@ -129,6 +130,18 @@ export default class AdvancedImportExportPlugin extends Plugin {
 				const sel = selectionFromActiveEditor(this.app);
 				if (!sel || sel.notes.length === 0) return false;
 				if (!checking) void this.pickFlomoAndExport(sel.notes);
+				return true;
+			},
+		});
+
+		this.addCommand({
+			id: "export-active-to-yinxiang",
+			name: t("commands.sendToYinxiang"),
+			checkCallback: (checking) => {
+				if (this.listYinxiangConfigs().length === 0) return false;
+				const sel = selectionFromActiveEditor(this.app);
+				if (!sel || sel.notes.length === 0) return false;
+				if (!checking) void this.pickYinxiangAndExport(sel.notes);
 				return true;
 			},
 		});
@@ -320,6 +333,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 			this.addWpsSubmenus(sub, notes);
 			this.addYoudaoSubmenus(sub, notes);
 			this.addFlomoSubmenus(sub, notes);
+			this.addYinxiangSubmenus(sub, notes);
 		});
 	}
 
@@ -464,6 +478,42 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		}
 	}
 
+	private addYinxiangSubmenus(menu: Menu, files: TFile[]): void {
+		if (files.length === 0) return;
+		const configs = this.listYinxiangConfigs();
+		if (configs.length === 0) return;
+		for (const config of configs) {
+			const provider = this.registry.get(config.id);
+			const avail = provider?.available?.() ?? { ok: false, reason: t("providers.enableInSettings") };
+			menu.addItem((item) => {
+				item.setTitle(config.displayName).setIcon("book-marked");
+				const submenu = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
+				submenu.addItem((sub: MenuItem) =>
+					sub
+						.setTitle(
+							files.length === 1
+								? `Export note to ${config.displayName}`
+								: `Export ${files.length} notes to ${config.displayName}`,
+						)
+						.setIcon("upload")
+						.setDisabled(!avail.ok)
+						.onClick(async () => {
+							try {
+								await this.exportToProvider(config, files);
+							} catch (err) {
+								new Notice(t("notices.exportFailed", { error: errorMessage(err) }));
+							}
+						}),
+				);
+				if (!avail.ok && avail.reason) {
+					submenu.addItem((sub: MenuItem) =>
+						sub.setTitle(`(${avail.reason})`).setDisabled(true),
+					);
+				}
+			});
+		}
+	}
+
 	private listWpsConfigs(): WpsProviderConfig[] {
 		return this.settings.providers.filter(
 			(p): p is WpsProviderConfig => p.kind === "wps" && p.enabled !== false,
@@ -504,8 +554,25 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		await this.exportToProvider(target, files);
 	}
 
+	private listYinxiangConfigs(): YinxiangProviderConfig[] {
+		return this.settings.providers.filter(
+			(p): p is YinxiangProviderConfig => p.kind === "yinxiang" && p.enabled !== false,
+		);
+	}
+
+	private async pickYinxiangAndExport(files: TFile[]): Promise<void> {
+		const configs = this.listYinxiangConfigs();
+		if (configs.length === 0) {
+			new Notice(t("notices.noProviderConfigured", { provider: YINXIANG_NAME }));
+			return;
+		}
+		const target = configs.length === 1 ? configs[0]! : await this.pickProviderConfig(configs, t("notices.selectProvider", { provider: YINXIANG_NAME }));
+		if (!target) return;
+		await this.exportToProvider(target, files);
+	}
+
 	private async exportToProvider(
-		config: WpsProviderConfig | YoudaoProviderConfig | FlomoProviderConfig,
+		config: WpsProviderConfig | YoudaoProviderConfig | FlomoProviderConfig | YinxiangProviderConfig,
 		files: TFile[],
 	): Promise<void> {
 		const provider = this.registry.get(config.id);

@@ -9,7 +9,9 @@ import { ProviderConfigBase } from "../providers/registry";
 import { WpsProvider } from "../providers/wps/wps-provider";
 import { WpsProviderConfig } from "../providers/wps/types";
 import { YoudaoProvider } from "../providers/youdao/youdao-provider";
-import { BEAR_NAME, FLOMO_NAME, WPS_NAME, YOUDAO_NAME } from "../ui/brand-names";
+import { YinxiangProvider } from "../providers/yinxiang/yinxiang-provider";
+import { YinxiangProviderConfig, YINXIANG_OAUTH_URL } from "../providers/yinxiang/types";
+import { BEAR_NAME, FLOMO_NAME, WPS_NAME, YOUDAO_NAME, YINXIANG_NAME } from "../ui/brand-names";
 import {
 	YOUDAO_API_KEY_URL,
 	YOUDAO_INSTALL_CMD,
@@ -159,6 +161,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				wps: t("brands.wps"),
 				youdao: t("brands.youdao"),
 				flomo: t("brands.flomo"),
+				yinxiang: t("brands.yinxiang"),
 			}),
 		});
 
@@ -180,6 +183,9 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				return;
 			case "flomo":
 				this.renderFlomoProvider(containerEl, config as FlomoProviderConfig);
+				return;
+			case "yinxiang":
+				this.renderYinxiangProvider(containerEl, config as YinxiangProviderConfig);
 				return;
 			default:
 				containerEl.createEl("p", {
@@ -521,6 +527,73 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			.addButton((btn) =>
 				btn.setButtonText(t("settings.buttons.test")).onClick(async () => {
 					const provider = this.plugin.registry.get(config.id) as FlomoProvider | null;
+					if (!provider) {
+						new Notice(t("providers.notEnabled"));
+						return;
+					}
+					const notice = new Notice(t("notices.connectionTesting"), 0);
+					const result = await provider.testConnection?.();
+					notice.hide();
+					new Notice(result?.message ?? (result?.ok ? t("notices.connectionSuccess") : t("notices.connectionFailed")));
+				}),
+			);
+	}
+
+	private renderYinxiangProvider(parentEl: HTMLElement, config: YinxiangProviderConfig): void {
+		const containerEl = this.openCollapsibleCard(
+			parentEl,
+			config.displayName || t("brands.yinxiang"),
+			config,
+		);
+		const intro = containerEl.createEl("p");
+		intro.appendText(t("providers.yinxiangIntro", { provider: YINXIANG_NAME }) + " ");
+		intro.createEl("a", {
+			text: t("providers.getYinxiangToken"),
+			href: YINXIANG_OAUTH_URL,
+		}).setAttr("target", "_blank");
+
+		new Setting(containerEl).setName(t("settings.labels.displayName")).addText((text) =>
+			text.setValue(config.displayName).onChange(async (v) => {
+				config.displayName = v.trim() || t("brands.yinxiang");
+				await this.plugin.saveSettings();
+			}),
+		);
+
+		new Setting(containerEl)
+			.setName(t("settings.labels.apiKey"))
+			.setDesc("Paste the token starting with S=s from the OAuth page above.")
+			.addText((text) => {
+				text.inputEl.type = "password";
+				text.setValue(config.apiKey ?? "").onChange(async (v) => {
+					config.apiKey = v.trim() || undefined;
+					await this.plugin.saveSettings();
+				});
+			});
+
+		new Setting(containerEl)
+			.setName(t("settings.labels.defaultFolderId"))
+			.setDesc("Optional. Notebook GUID for new notes. Leave empty for the default notebook.")
+			.addText((text) =>
+				text
+					.setValue(config.defaultNotebookGuid ?? "")
+					.onChange(async (v) => {
+						config.defaultNotebookGuid = v.trim() || undefined;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl).setName(t("settings.labels.enabled")).addToggle((tog) =>
+			tog.setValue(config.enabled).onChange(async (v) => {
+				config.enabled = v;
+				await this.plugin.saveSettings();
+			}),
+		);
+
+		new Setting(containerEl)
+			.setName(t("settings.labels.testConnection"))
+			.addButton((btn) =>
+				btn.setButtonText(t("settings.buttons.test")).onClick(async () => {
+					const provider = this.plugin.registry.get(config.id) as YinxiangProvider | null;
 					if (!provider) {
 						new Notice(t("providers.notEnabled"));
 						return;

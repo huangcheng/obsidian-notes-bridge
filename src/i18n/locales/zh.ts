@@ -10,6 +10,7 @@ export const zh = {
 		sendToWps: "发送活动笔记到 WPS 云笔记…",
 		sendToYoudao: "发送活动笔记到有道云笔记…",
 		sendToFlomo: "发送活动笔记到 Flomo…",
+		sendToYinxiang: "发送活动笔记到印象笔记…",
 	},
 	notices: {
 		noActiveNote: "没有活动笔记可复制",
@@ -109,7 +110,8 @@ export const zh = {
 			saveToCli: "保存到 CLI",
 		},
 		providerIntro:
-			"配置 {{bear}}、{{wps}}、{{youdao}} 和 {{flomo}} 的笔记源集成。每个提供商都会向插件命令和文件资源管理器右键菜单公开导入/导出操作。",
+			"配置 {{bear}}、{{wps}}、{{youdao}}、{{flomo}} 和 {{yinxiang}} 的笔记源集成。每个提供商都会向插件命令和文件资源管理器右键菜单公开导入/导出操作。",
+
 		options: {
 			drop: "丢弃",
 			replaceWithLink: "替换为链接",
@@ -150,18 +152,25 @@ export const zh = {
 		youdaoIntro: "通过官方 CLI 连接有道云笔记。仅支持桌面版。",
 		flomoIntro:
 			"通过官方 MCP 服务器将备忘导出到 {{provider}}。需要 Flomo Pro 账户和 API 令牌。",
+		yinxiangIntro:
+			"通过 REST API 将笔记导出到 {{provider}}。需要从印象笔记技能 OAuth 页面获取认证令牌。",
+
 		bearDescription:
 			"通过官方 bearcli（桌面版）或应用的 URL 协议（macOS 和 iOS）访问 {{provider}} 笔记；无需凭据。",
 		bearTransportDesc:
 			"自动探测一次 bearcli，然后回退到 URL 协议。URL = 旧版 / 仅 iOS。CLI = 需要 bearcli。",
 		getApiKey: "获取 API 密钥",
 		getToken: "获取令牌",
+		getYinxiangToken: "获取印象笔记令牌",
+
 	},
 	brands: {
 		bear: "Bear",
 		wps: "WPS 云笔记",
 		youdao: "有道云笔记",
 		flomo: "Flomo",
+		yinxiang: "印象笔记",
 		plugin: "跨应用笔记桥",
+
 	},
 } as const;

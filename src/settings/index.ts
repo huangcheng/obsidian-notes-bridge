@@ -4,6 +4,7 @@ import { DEFAULT_FLOMO_CONFIG, FlomoProviderConfig } from "../providers/flomo/ty
 import { ProviderConfigBase } from "../providers/registry";
 import { DEFAULT_WPS_CONFIG, WpsProviderConfig } from "../providers/wps/types";
 import { DEFAULT_YOUDAO_CONFIG, YoudaoProviderConfig } from "../providers/youdao/types";
+import { DEFAULT_YINXIANG_CONFIG, YinxiangProviderConfig } from "../providers/yinxiang/types";
 import { DEFAULT_TRANSFORM_CONFIG, TransformConfig } from "../transforms/config";
 
 export type ProviderConfig =
@@ -11,6 +12,7 @@ export type ProviderConfig =
 	| WpsProviderConfig
 	| YoudaoProviderConfig
 	| FlomoProviderConfig
+	| YinxiangProviderConfig
 	| ProviderConfigBase;
 
 export interface PluginSettings {
@@ -67,6 +69,14 @@ export function applyDefaultProviderMigration(settings: PluginSettings): void {
 			id: "flomo",
 			displayName: "Flomo",
 			...DEFAULT_FLOMO_CONFIG,
+		};
+		settings.providers.push(cfg);
+	}
+	if (!settings.providers.some((p) => p.kind === "yinxiang")) {
+		const cfg: YinxiangProviderConfig = {
+			id: "yinxiang",
+			displayName: "Yinxiang",
+			...DEFAULT_YINXIANG_CONFIG,
 		};
 		settings.providers.push(cfg);
 	}

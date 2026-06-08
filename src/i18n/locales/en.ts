@@ -10,6 +10,7 @@ export const en = {
 		sendToWps: "Send active note to WPS Cloud Note…",
 		sendToYoudao: "Send active note to Youdao Note…",
 		sendToFlomo: "Send active note to Flomo…",
+		sendToYinxiang: "Send active note to Yinxiang…",
 	},
 	notices: {
 		noActiveNote: "No active note to copy",
@@ -116,7 +117,7 @@ export const en = {
 			saveToCli: "Save to CLI",
 		},
 		providerIntro:
-			"Configure note-source integrations for {{bear}}, {{wps}}, {{youdao}}, and {{flomo}}. Each provider exposes import / export operations to the plugin's commands and the file-explorer right-click menu.",
+			"Configure note-source integrations for {{bear}}, {{wps}}, {{youdao}}, {{flomo}}, and {{yinxiang}}. Each provider exposes import / export operations to the plugin's commands and the file-explorer right-click menu.",
 		options: {
 			drop: "Drop",
 			replaceWithLink: "Replace with link",
@@ -157,18 +158,22 @@ export const en = {
 		youdaoIntro: "Connects to Youdao Note via its official CLI. Desktop only.",
 		flomoIntro:
 			"Export memos to {{provider}} via its official MCP server. Requires a Flomo Pro account and an API token.",
+		yinxiangIntro:
+			"Export notes to {{provider}} via its REST API. Requires an auth token from the Yinxiang skills OAuth page.",
 		bearDescription:
 			"{{provider}} notes are reached via the official bearcli (desktop) or the app's URL scheme (macOS and iOS); no credentials needed.",
 		bearTransportDesc:
 			"Auto probes bearcli once, then falls back to the URL scheme. URL = legacy / iOS only. CLI = require bearcli.",
 		getApiKey: "Get API key",
 		getToken: "Get a token",
+		getYinxiangToken: "Get Yinxiang token",
 	},
 	brands: {
 		bear: "Bear",
 		wps: "WPS Cloud Note",
 		youdao: "Youdao Note",
 		flomo: "Flomo",
+		yinxiang: "Yinxiang",
 		plugin: "Cross-App Notes Bridge",
 	},
 } as const;
