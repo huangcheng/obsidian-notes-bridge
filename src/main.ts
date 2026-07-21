@@ -13,12 +13,13 @@ import { ProviderConfigBase, ProviderRegistry } from "./providers/registry";
 import { WpsProviderConfig } from "./providers/wps/types";
 import { YoudaoProviderConfig } from "./providers/youdao/types";
 import { YinxiangProviderConfig } from "./providers/yinxiang/types";
+import { WeknoraProviderConfig } from "./providers/weknora/types";
 import { selectionFromActiveEditor, selectionFromFileMenu, selectionFromFiles } from "./selection/builders";
 import { NoteSelection } from "./selection/note-selection";
 import { applyDefaultProviderMigration, DEFAULT_SETTINGS, PluginSettings } from "./settings";
 import { AdvancedImportExportSettingTab } from "./settings/settings-tab";
 import { MarkdownTransformer } from "./transforms/transformer";
-import { FLOMO_NAME, WPS_NAME, YOUDAO_NAME, YINXIANG_NAME } from "./ui/brand-names";
+import { FLOMO_NAME, WPS_NAME, WEKNORA_NAME, YOUDAO_NAME, YINXIANG_NAME } from "./ui/brand-names";
 import { ExportConfirmModal } from "./ui/export-confirm-modal";
 import { BearImportModal } from "./ui/bear-import-modal";
 import { tryRegisterNotebookNavigatorMenus } from "./integrations/notebook-navigator";
@@ -182,6 +183,18 @@ export default class AdvancedImportExportPlugin extends Plugin {
 				const sel = selectionFromActiveEditor(this.app);
 				if (!sel || sel.notes.length === 0) return false;
 				if (!checking) void this.pickYinxiangAndExport(sel.notes);
+				return true;
+			},
+		});
+
+		this.addCommand({
+			id: "export-active-to-weknora",
+			name: t("commands.sendToWeknora"),
+			checkCallback: (checking) => {
+				if (this.listWeknoraConfigs().length === 0) return false;
+				const sel = selectionFromActiveEditor(this.app);
+				if (!sel || sel.notes.length === 0) return false;
+				if (!checking) void this.pickWeknoraAndExport(sel.notes);
 				return true;
 			},
 		});
@@ -447,7 +460,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 						.setSection(config.id)
 						.onClick(async () => {
 							try {
-								await this.exportToProvider(config as WpsProviderConfig | YoudaoProviderConfig | FlomoProviderConfig | YinxiangProviderConfig, files);
+								await this.exportToProvider(config as WpsProviderConfig | YoudaoProviderConfig | FlomoProviderConfig | YinxiangProviderConfig | WeknoraProviderConfig, files);
 							} catch (err) {
 								new Notice(t("notices.exportFailed", { error: errorMessage(err) }));
 							}
@@ -539,8 +552,25 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		await this.exportToProvider(target, files);
 	}
 
+	private listWeknoraConfigs(): WeknoraProviderConfig[] {
+		return this.settings.providers.filter(
+			(p): p is WeknoraProviderConfig => p.kind === "weknora" && p.enabled !== false,
+		);
+	}
+
+	private async pickWeknoraAndExport(files: TFile[]): Promise<void> {
+		const configs = this.listWeknoraConfigs();
+		if (configs.length === 0) {
+			new Notice(t("notices.noProviderConfigured", { provider: WEKNORA_NAME }));
+			return;
+		}
+		const target = configs.length === 1 ? configs[0]! : await this.pickProviderConfig(configs, t("notices.selectProvider", { provider: WEKNORA_NAME }));
+		if (!target) return;
+		await this.exportToProvider(target, files);
+	}
+
 	private async exportToProvider(
-		config: WpsProviderConfig | YoudaoProviderConfig | FlomoProviderConfig | YinxiangProviderConfig,
+		config: WpsProviderConfig | YoudaoProviderConfig | FlomoProviderConfig | YinxiangProviderConfig | WeknoraProviderConfig,
 		files: TFile[],
 	): Promise<void> {
 		const provider = this.registry.get(config.id);
@@ -643,6 +673,7 @@ function providerIcon(kind: string): string {
 		case "youdao": return "edit";
 		case "flomo": return "notebook-pen";
 		case "yinxiang": return "book-marked";
+		case "weknora": return "database";
 		default: return "export";
 	}
 }
