@@ -200,6 +200,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				youdao: t("brands.youdao"),
 				flomo: t("brands.flomo"),
 				yinxiang: t("brands.yinxiang"),
+				weknora: t("brands.weknora"),
 			}),
 		});
 

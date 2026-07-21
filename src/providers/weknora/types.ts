@@ -23,9 +23,6 @@ export const DEFAULT_WEKNORA_CONFIG: Omit<WeknoraProviderConfig, "id" | "display
 	enabled: true,
 };
 
-/** Path suffix every WeKnora server exposes. The base URL already includes it. */
-export const WEKNORA_API_PATH = "/api/v1";
-
 /** Label sent with each ingest so WeKnora analytics can attribute the source. */
 export const WEKNORA_CHANNEL = "obsidian";
 

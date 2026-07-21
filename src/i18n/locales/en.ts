@@ -124,7 +124,7 @@ export const en = {
 			saveToCli: "Save to CLI",
 		},
 		providerIntro:
-			"Configure note-source integrations for {{bear}}, {{wps}}, {{youdao}}, {{flomo}}, and {{yinxiang}}. Each provider exposes import / export operations to the plugin's commands and the file-explorer right-click menu.",
+			"Configure note-source integrations for {{bear}}, {{wps}}, {{youdao}}, {{flomo}}, {{yinxiang}}, and {{weknora}}. Each provider exposes import / export operations to the plugin's commands and the file-explorer right-click menu.",
 		options: {
 			drop: "Drop",
 			replaceWithLink: "Replace with link",

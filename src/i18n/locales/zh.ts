@@ -117,7 +117,7 @@ export const zh = {
 			saveToCli: "保存到 CLI",
 		},
 		providerIntro:
-			"配置 {{bear}}、{{wps}}、{{youdao}}、{{flomo}} 和 {{yinxiang}} 的笔记源集成。每个提供商都会向插件命令和文件资源管理器右键菜单公开导入/导出操作。",
+			"配置 {{bear}}、{{wps}}、{{youdao}}、{{flomo}}、{{yinxiang}}、{{weknora}} 的笔记源集成。每个提供商都会向插件命令和文件资源管理器右键菜单公开导入/导出操作。",
 
 		options: {
 			drop: "丢弃",
