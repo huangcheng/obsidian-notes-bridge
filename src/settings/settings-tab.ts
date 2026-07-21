@@ -719,7 +719,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 		selectEl.value = config.knowledgeBaseId ?? "";
 		selectEl.addEventListener("change", () => {
 			const id = selectEl.value;
-			const name = selectEl.selectedOptions[0]?.text ?? "";
+			const name = selectEl.selectedOptions[0]?.dataset.name ?? "";
 			config.knowledgeBaseId = id || undefined;
 			config.knowledgeBaseName = id ? name : undefined;
 			void this.plugin.saveSettings();
@@ -740,17 +740,25 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 						opt.value = "";
 						opt.text = t("providers.weknoraNoKb");
 						selectEl.appendChild(opt);
+						config.knowledgeBaseId = undefined;
+						config.knowledgeBaseName = undefined;
 					} else {
 						for (const kb of kbs) {
 							const opt = document.createElement("option");
 							opt.value = kb.id;
 							opt.text = `${kb.name} (${kb.type})`;
+							opt.dataset.name = kb.name;
 							selectEl.appendChild(opt);
 						}
-						if (config.knowledgeBaseId && kbs.some((k) => k.id === config.knowledgeBaseId)) {
-							selectEl.value = config.knowledgeBaseId;
-						}
+						// Programmatic population doesn't fire "change", so persist
+						// the effective selection here: keep the configured KB if it
+						// still exists, otherwise auto-select the first one.
+						const chosen = kbs.find((k) => k.id === config.knowledgeBaseId) ?? kbs[0]!;
+						selectEl.value = chosen.id;
+						config.knowledgeBaseId = chosen.id;
+						config.knowledgeBaseName = chosen.name;
 					}
+					await this.plugin.saveSettings();
 					notice.hide();
 					new Notice(`${t("notices.connectionSuccess")} — ${kbs.length}`);
 				} catch (err) {
