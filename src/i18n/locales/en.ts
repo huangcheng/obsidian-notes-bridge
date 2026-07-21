@@ -160,6 +160,10 @@ export const en = {
 			"Export memos to {{provider}} via its official MCP server. Requires a Flomo Pro account and an API token.",
 		yinxiangIntro:
 			"Export notes to {{provider}} via its REST API. Requires an auth token from the Yinxiang skills OAuth page.",
+		weknoraUnreachable: "Could not reach the WeKnora server.",
+		weknoraCreateFailed: "WeKnora accepted the request but reported failure.",
+		weknoraReadUnsupported: "WeKnora does not support reading notes back.",
+		weknoraIncompleteConfig: "Configure API URL, API key, and a knowledge base in settings first.",
 		bearDescription:
 			"{{provider}} notes are reached via the official bearcli (desktop) or the app's URL scheme (macOS and iOS); no credentials needed.",
 		bearTransportDesc:
@@ -174,6 +178,7 @@ export const en = {
 		youdao: "Youdao Note",
 		flomo: "Flomo",
 		yinxiang: "Yinxiang",
+		weknora: "WeKnora",
 		plugin: "Cross-App Notes Bridge",
 	},
 } as const;

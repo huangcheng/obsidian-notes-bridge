@@ -1,6 +1,7 @@
 import { bearFactory } from "./bear/bear-provider";
 import { flomoFactory } from "./flomo/flomo-provider";
 import { ProviderRegistry } from "./registry";
+import { weknoraFactory } from "./weknora/weknora-provider";
 import { wpsFactory } from "./wps/wps-provider";
 import { youdaoFactory } from "./youdao/youdao-provider";
 import { yinxiangFactory } from "./yinxiang/yinxiang-provider";
@@ -15,4 +16,5 @@ export function registerAllFactories(registry: ProviderRegistry): void {
 	registry.registerFactory(youdaoFactory);
 	registry.registerFactory(flomoFactory);
 	registry.registerFactory(yinxiangFactory);
+	registry.registerFactory(weknoraFactory);
 }

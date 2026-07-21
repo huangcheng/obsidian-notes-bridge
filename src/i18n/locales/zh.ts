@@ -154,6 +154,10 @@ export const zh = {
 			"通过官方 MCP 服务器将备忘导出到 {{provider}}。需要 Flomo Pro 账户和 API 令牌。",
 		yinxiangIntro:
 			"通过 REST API 将笔记导出到 {{provider}}。需要从印象笔记技能 OAuth 页面获取认证令牌。",
+		weknoraUnreachable: "无法连接到 WeKnora 服务器。",
+		weknoraCreateFailed: "WeKnora 已接收请求但返回失败。",
+		weknoraReadUnsupported: "WeKnora 不支持回读笔记。",
+		weknoraIncompleteConfig: "请先在设置中填写 API 地址、API 密钥和知识库。",
 
 		bearDescription:
 			"通过官方 bearcli（桌面版）或应用的 URL 协议（macOS 和 iOS）访问 {{provider}} 笔记；无需凭据。",
@@ -170,6 +174,7 @@ export const zh = {
 		youdao: "有道云笔记",
 		flomo: "Flomo",
 		yinxiang: "印象笔记",
+		weknora: "WeKnora",
 		plugin: "跨应用笔记桥",
 
 	},
