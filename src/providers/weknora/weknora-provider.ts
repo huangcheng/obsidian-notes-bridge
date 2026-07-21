@@ -50,7 +50,7 @@ export class WeknoraProvider implements Provider {
 	}
 
 	async push(note: NormalizedNote): Promise<{ remoteId: string }> {
-		const { base, key, kbId } = this.requireConfig();
+		const { base, key, kbId } = this.requirePushConfig();
 		const title = note.title.trim() || "Untitled";
 
 		let response;
@@ -99,7 +99,7 @@ export class WeknoraProvider implements Provider {
 	 * key's allowed KBs).
 	 */
 	async listKnowledgeBases(): Promise<WeknoraKnowledgeBase[]> {
-		const { base, key } = this.requireConfig();
+		const { base, key } = this.requireConnectionConfig();
 		let response;
 		try {
 			response = await requestUrl({
@@ -134,11 +134,19 @@ export class WeknoraProvider implements Provider {
 		// No long-lived resources (no MCP client, no subprocess).
 	}
 
-	private requireConfig(): { base: string; key: string; kbId: string } {
+	private requireConnectionConfig(): { base: string; key: string } {
 		const base = normalizeWeknoraBaseUrl(this.config.baseUrl ?? "");
 		const key = this.config.apiKey?.trim() ?? "";
+		if (!base || !key) {
+			throw new Error(t("providers.weknoraIncompleteConfig"));
+		}
+		return { base, key };
+	}
+
+	private requirePushConfig(): { base: string; key: string; kbId: string } {
+		const { base, key } = this.requireConnectionConfig();
 		const kbId = this.config.knowledgeBaseId?.trim() ?? "";
-		if (!base || !key || !kbId) {
+		if (!kbId) {
 			throw new Error(t("providers.weknoraIncompleteConfig"));
 		}
 		return { base, key, kbId };
