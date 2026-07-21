@@ -65,6 +65,9 @@ export class WeknoraProvider implements Provider {
 				body: JSON.stringify({
 					title,
 					content: note.body,
+					// "publish" is required: the server defaults manual entries to
+					// "draft", which is never chunked/embedded (not searchable).
+					status: "publish",
 					channel: WEKNORA_CHANNEL,
 				}),
 				throw: false,
