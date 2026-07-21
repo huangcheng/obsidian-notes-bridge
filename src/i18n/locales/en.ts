@@ -11,6 +11,7 @@ export const en = {
 		sendToYoudao: "Send active note to Youdao Note…",
 		sendToFlomo: "Send active note to Flomo…",
 		sendToYinxiang: "Send active note to Yinxiang…",
+		sendToWeknora: "Send active note to WeKnora\u2026",
 	},
 	notices: {
 		noActiveNote: "No active note to copy",
@@ -76,6 +77,8 @@ export const en = {
 			testConnection: "Test connection",
 			apiKey: "API key",
 			apiToken: "API token",
+			apiUrl: "API URL",
+			knowledgeBase: "Knowledge base",
 			writeToolName: "Write tool name",
 			defaultFolderId: "Default folder ID",
 			detectCli: "Detect CLI",
@@ -103,6 +106,9 @@ export const en = {
 				"Stored only locally. The plugin pushes it to the CLI via `youdaonote config set apiKey`.",
 			apiToken:
 				"Stored locally. Sent to https://flomoapp.com/mcp as 'Authorization: Bearer <token>'.",
+			weknoraApiUrl: "Full API base including /api/v1, e.g. http://localhost:8080/api/v1.",
+			weknoraApiKey: "Stored locally. Sent as the X-API-Key header on every request.",
+			weknoraKnowledgeBase: "Default knowledge base for exports. Click Refresh to load the list from the server.",
 			writeToolName:
 				"Optional override. Leave empty to auto-pick (write_note → write_memo → first write_*).",
 			defaultFolderId:
@@ -113,6 +119,7 @@ export const en = {
 		},
 		buttons: {
 			test: "Test",
+			refresh: "Refresh",
 			detect: "Detect",
 			saveToCli: "Save to CLI",
 		},
@@ -171,6 +178,10 @@ export const en = {
 		getApiKey: "Get API key",
 		getToken: "Get a token",
 		getYinxiangToken: "Get Yinxiang token",
+		weknoraIntro:
+			"Export notes to a self-hosted or cloud {{provider}} instance via its REST API. Create an API key in WeKnora \u2192 Settings \u2192 Integrations \u2192 API with full access or the ingest capability.",
+		getWeknoraToken: "Open WeKnora on GitHub",
+		weknoraNoKb: "No knowledge base selected. Enter API URL + API key, then click Refresh.",
 	},
 	brands: {
 		bear: "Bear",

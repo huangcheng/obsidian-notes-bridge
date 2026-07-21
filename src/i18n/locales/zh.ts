@@ -11,6 +11,7 @@ export const zh = {
 		sendToYoudao: "发送活动笔记到有道云笔记…",
 		sendToFlomo: "发送活动笔记到 Flomo…",
 		sendToYinxiang: "发送活动笔记到印象笔记…",
+		sendToWeknora: "发送活动笔记到 WeKnora\u2026",
 	},
 	notices: {
 		noActiveNote: "没有活动笔记可复制",
@@ -74,6 +75,8 @@ export const zh = {
 			testConnection: "测试连接",
 			apiKey: "API 密钥",
 			apiToken: "API 令牌",
+			apiUrl: "API 地址",
+			knowledgeBase: "知识库",
 			writeToolName: "写入工具名称",
 			defaultFolderId: "默认文件夹 ID",
 			detectCli: "检测 CLI",
@@ -97,6 +100,9 @@ export const zh = {
 			apiKey: "仅在本地存储。插件通过 `youdaonote config set apiKey` 将其推送到 CLI。",
 			apiToken:
 				"仅在本地存储。以 'Authorization: Bearer <token>' 形式发送到 https://flomoapp.com/mcp。",
+			weknoraApiUrl: "完整 API 地址（含 /api/v1），例如 http://localhost:8080/api/v1。",
+			weknoraApiKey: "仅在本地存储。每次请求以 X-API-Key 头发送。",
+			weknoraKnowledgeBase: "导出默认知识库。点击\u300c刷新\u300d从服务器加载列表。",
 			writeToolName:
 				"可选覆盖。留空则自动选择（write_note → write_memo → 第一个 write_*）。",
 			defaultFolderId: "可选。新笔记保存的文件夹 ID。留空则使用默认文件夹。",
@@ -106,6 +112,7 @@ export const zh = {
 		},
 		buttons: {
 			test: "测试",
+			refresh: "刷新",
 			detect: "检测",
 			saveToCli: "保存到 CLI",
 		},
@@ -166,6 +173,10 @@ export const zh = {
 		getApiKey: "获取 API 密钥",
 		getToken: "获取令牌",
 		getYinxiangToken: "获取印象笔记令牌",
+		weknoraIntro:
+			"通过 REST API 将笔记导出到自托管或云端 {{provider}} 实例。请在 WeKnora \u2192 设置 \u2192 集成 \u2192 API 创建具备完全访问或 ingest 权限的 API 密钥。",
+		getWeknoraToken: "在 GitHub 上打开 WeKnora",
+		weknoraNoKb: "尚未选择知识库。请先填写 API 地址与 API 密钥，再点击\u300c刷新\u300d。",
 
 	},
 	brands: {

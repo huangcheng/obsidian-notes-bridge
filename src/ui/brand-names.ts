@@ -6,4 +6,5 @@ export const WPS_NAME = "WPS Cloud Note";
 export const YOUDAO_NAME = "Youdao Note";
 export const FLOMO_NAME = "Flomo";
 export const YINXIANG_NAME = "Yinxiang";
+export const WEKNORA_NAME = "WeKnora";
 export const PLUGIN_NAME = "Cross-App Notes Bridge";

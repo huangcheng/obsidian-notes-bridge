@@ -11,13 +11,15 @@ import { WpsProviderConfig } from "../providers/wps/types";
 import { YoudaoProvider } from "../providers/youdao/youdao-provider";
 import { YinxiangProvider } from "../providers/yinxiang/yinxiang-provider";
 import { YinxiangProviderConfig, YINXIANG_OAUTH_URL } from "../providers/yinxiang/types";
-import { BEAR_NAME, FLOMO_NAME, WPS_NAME, YOUDAO_NAME, YINXIANG_NAME } from "../ui/brand-names";
+import { BEAR_NAME, FLOMO_NAME, WPS_NAME, WEKNORA_NAME, YOUDAO_NAME, YINXIANG_NAME } from "../ui/brand-names";
 import {
 	YOUDAO_API_KEY_URL,
 	YOUDAO_INSTALL_CMD,
 	YOUDAO_INSTALL_GUIDE,
 	YoudaoProviderConfig,
 } from "../providers/youdao/types";
+import { WeknoraProvider } from "../providers/weknora/weknora-provider";
+import { WEKNORA_TOKEN_HELP_URL, WeknoraProviderConfig } from "../providers/weknora/types";
 
 /**
  * Lucide icon SVGs for provider cards.
@@ -31,6 +33,9 @@ const PROVIDER_ICONS: Record<string, string> = {
 };
 
 const CHEVRON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+
+/** Example base URL shown as a placeholder in the WeKnora API URL field. */
+const WEKNORA_API_URL_PLACEHOLDER = "http://localhost:8080/api/v1";
 
 /**
  * Safely parse an SVG string into a DOM element using DOMParser
@@ -220,6 +225,9 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				return;
 			case "yinxiang":
 				this.renderYinxiangProvider(containerEl, config as YinxiangProviderConfig);
+				return;
+			case "weknora":
+				this.renderWeknoraProvider(containerEl, config as WeknoraProviderConfig);
 				return;
 			default:
 				containerEl.createEl("p", {
@@ -641,6 +649,128 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			.addButton((btn) =>
 				btn.setButtonText(t("settings.buttons.test")).onClick(async () => {
 					const provider = this.plugin.registry.get(config.id) as YinxiangProvider | null;
+					if (!provider) {
+						new Notice(t("providers.notEnabled"));
+						return;
+					}
+					const notice = new Notice(t("notices.connectionTesting"), 0);
+					const result = await provider.testConnection?.();
+					notice.hide();
+					new Notice(result?.message ?? (result?.ok ? t("notices.connectionSuccess") : t("notices.connectionFailed")));
+				}),
+			);
+	}
+
+	private renderWeknoraProvider(parentEl: HTMLElement, config: WeknoraProviderConfig): void {
+		const containerEl = this.openCollapsibleCard(
+			parentEl,
+			config.displayName || t("brands.weknora"),
+			config,
+		);
+		const intro = containerEl.createEl("p");
+		intro.appendText(t("providers.weknoraIntro", { provider: WEKNORA_NAME }) + " ");
+		intro
+			.createEl("a", {
+				text: t("providers.getWeknoraToken"),
+				href: WEKNORA_TOKEN_HELP_URL,
+			})
+			.setAttr("target", "_blank");
+
+		new Setting(containerEl).setName(t("settings.labels.displayName")).addText((text) =>
+			text.setValue(config.displayName).onChange(async (v) => {
+				config.displayName = v.trim() || t("brands.weknora");
+				await this.plugin.saveSettings();
+			}),
+		);
+
+		new Setting(containerEl)
+			.setName(t("settings.labels.apiUrl"))
+			.setDesc(t("settings.descriptions.weknoraApiUrl"))
+			.addText((text) => {
+				text.setPlaceholder(WEKNORA_API_URL_PLACEHOLDER);
+				text.setValue(config.baseUrl ?? "");
+				text.inputEl.type = "text";
+				text.onChange(async (v) => {
+					config.baseUrl = v.trim() || undefined;
+					await this.plugin.saveSettings();
+				});
+			});
+
+		new Setting(containerEl)
+			.setName(t("settings.labels.apiKey"))
+			.setDesc(t("settings.descriptions.weknoraApiKey"))
+			.addText((text) => {
+				text.inputEl.type = "password";
+				text.setValue(config.apiKey ?? "").onChange(async (v) => {
+					config.apiKey = v.trim() || undefined;
+					await this.plugin.saveSettings();
+				});
+			});
+
+		const kbSetting = new Setting(containerEl)
+			.setName(t("settings.labels.knowledgeBase"))
+			.setDesc(t("settings.descriptions.weknoraKnowledgeBase"));
+		const selectEl = kbSetting.controlEl.createEl("select");
+		const placeholder = document.createElement("option");
+		placeholder.value = "";
+		placeholder.text = config.knowledgeBaseName || t("providers.weknoraNoKb");
+		selectEl.appendChild(placeholder);
+		selectEl.value = config.knowledgeBaseId ?? "";
+		selectEl.addEventListener("change", () => {
+			const id = selectEl.value;
+			const name = selectEl.selectedOptions[0]?.text ?? "";
+			config.knowledgeBaseId = id || undefined;
+			config.knowledgeBaseName = id ? name : undefined;
+			void this.plugin.saveSettings();
+		});
+		kbSetting.addButton((btn) =>
+			btn.setButtonText(t("settings.buttons.refresh")).onClick(async () => {
+				const provider = this.plugin.registry.get(config.id) as WeknoraProvider | null;
+				if (!provider) {
+					new Notice(t("providers.notEnabled"));
+					return;
+				}
+				const notice = new Notice(t("notices.connectionTesting"), 0);
+				try {
+					const kbs = await provider.listKnowledgeBases();
+					while (selectEl.options.length > 0) selectEl.remove(0);
+					if (kbs.length === 0) {
+						const opt = document.createElement("option");
+						opt.value = "";
+						opt.text = t("providers.weknoraNoKb");
+						selectEl.appendChild(opt);
+					} else {
+						for (const kb of kbs) {
+							const opt = document.createElement("option");
+							opt.value = kb.id;
+							opt.text = `${kb.name} (${kb.type})`;
+							selectEl.appendChild(opt);
+						}
+						if (config.knowledgeBaseId && kbs.some((k) => k.id === config.knowledgeBaseId)) {
+							selectEl.value = config.knowledgeBaseId;
+						}
+					}
+					notice.hide();
+					new Notice(`${t("notices.connectionSuccess")} — ${kbs.length}`);
+				} catch (err) {
+					notice.hide();
+					new Notice(err instanceof Error ? err.message : String(err));
+				}
+			}),
+		);
+
+		new Setting(containerEl).setName(t("settings.labels.enabled")).addToggle((tog) =>
+			tog.setValue(config.enabled).onChange(async (v) => {
+				config.enabled = v;
+				await this.plugin.saveSettings();
+			}),
+		);
+
+		new Setting(containerEl)
+			.setName(t("settings.labels.testConnection"))
+			.addButton((btn) =>
+				btn.setButtonText(t("settings.buttons.test")).onClick(async () => {
+					const provider = this.plugin.registry.get(config.id) as WeknoraProvider | null;
 					if (!provider) {
 						new Notice(t("providers.notEnabled"));
 						return;
