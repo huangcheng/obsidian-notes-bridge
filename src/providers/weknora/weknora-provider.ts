@@ -69,7 +69,7 @@ export class WeknoraProvider implements Provider {
 				}),
 				throw: false,
 			});
-		} catch (err) {
+		} catch {
 			throw new Error(t("providers.weknoraUnreachable"));
 		}
 
@@ -108,7 +108,7 @@ export class WeknoraProvider implements Provider {
 				headers: { "X-API-Key": key },
 				throw: false,
 			});
-		} catch (err) {
+		} catch {
 			throw new Error(t("providers.weknoraUnreachable"));
 		}
 		if (response.status < 200 || response.status >= 300) {
