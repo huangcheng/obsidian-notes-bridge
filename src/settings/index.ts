@@ -5,6 +5,7 @@ import { ProviderConfigBase } from "../providers/registry";
 import { DEFAULT_WPS_CONFIG, WpsProviderConfig } from "../providers/wps/types";
 import { DEFAULT_YOUDAO_CONFIG, YoudaoProviderConfig } from "../providers/youdao/types";
 import { DEFAULT_YINXIANG_CONFIG, YinxiangProviderConfig } from "../providers/yinxiang/types";
+import { DEFAULT_WEKNORA_CONFIG, WeknoraProviderConfig } from "../providers/weknora/types";
 import { DEFAULT_TRANSFORM_CONFIG, TransformConfig } from "../transforms/config";
 
 export type ProviderConfig =
@@ -13,6 +14,7 @@ export type ProviderConfig =
 	| YoudaoProviderConfig
 	| FlomoProviderConfig
 	| YinxiangProviderConfig
+	| WeknoraProviderConfig
 	| ProviderConfigBase;
 
 export interface PluginSettings {
@@ -77,6 +79,14 @@ export function applyDefaultProviderMigration(settings: PluginSettings): void {
 			id: "yinxiang",
 			displayName: "Yinxiang",
 			...DEFAULT_YINXIANG_CONFIG,
+		};
+		settings.providers.push(cfg);
+	}
+	if (!settings.providers.some((p) => p.kind === "weknora")) {
+		const cfg: WeknoraProviderConfig = {
+			id: "weknora",
+			displayName: "WeKnora",
+			...DEFAULT_WEKNORA_CONFIG,
 		};
 		settings.providers.push(cfg);
 	}
