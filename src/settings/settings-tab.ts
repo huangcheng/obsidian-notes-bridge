@@ -724,49 +724,56 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			config.knowledgeBaseName = id ? name : undefined;
 			void this.plugin.saveSettings();
 		});
-		kbSetting.addButton((btn) =>
-			btn.setButtonText(t("settings.buttons.refresh")).onClick(async () => {
-				const provider = this.plugin.registry.get(config.id) as WeknoraProvider | null;
-				if (!provider) {
-					new Notice(t("providers.notEnabled"));
-					return;
-				}
-				const notice = new Notice(t("notices.connectionTesting"), 0);
-				try {
-					const kbs = await provider.listKnowledgeBases();
-					while (selectEl.options.length > 0) selectEl.remove(0);
-					if (kbs.length === 0) {
+		const refreshKnowledgeBases = async (interactive: boolean): Promise<void> => {
+			const provider = this.plugin.registry.get(config.id) as WeknoraProvider | null;
+			if (!provider) {
+				if (interactive) new Notice(t("providers.notEnabled"));
+				return;
+			}
+			const notice = interactive ? new Notice(t("notices.connectionTesting"), 0) : null;
+			try {
+				const kbs = await provider.listKnowledgeBases();
+				while (selectEl.options.length > 0) selectEl.remove(0);
+				if (kbs.length === 0) {
+					const opt = document.createElement("option");
+					opt.value = "";
+					opt.text = t("providers.weknoraNoKb");
+					selectEl.appendChild(opt);
+					config.knowledgeBaseId = undefined;
+					config.knowledgeBaseName = undefined;
+				} else {
+					for (const kb of kbs) {
 						const opt = document.createElement("option");
-						opt.value = "";
-						opt.text = t("providers.weknoraNoKb");
+						opt.value = kb.id;
+						opt.text = `${kb.name} (${kb.type})`;
+						opt.dataset.name = kb.name;
 						selectEl.appendChild(opt);
-						config.knowledgeBaseId = undefined;
-						config.knowledgeBaseName = undefined;
-					} else {
-						for (const kb of kbs) {
-							const opt = document.createElement("option");
-							opt.value = kb.id;
-							opt.text = `${kb.name} (${kb.type})`;
-							opt.dataset.name = kb.name;
-							selectEl.appendChild(opt);
-						}
-						// Programmatic population doesn't fire "change", so persist
-						// the effective selection here: keep the configured KB if it
-						// still exists, otherwise auto-select the first one.
-						const chosen = kbs.find((k) => k.id === config.knowledgeBaseId) ?? kbs[0]!;
-						selectEl.value = chosen.id;
-						config.knowledgeBaseId = chosen.id;
-						config.knowledgeBaseName = chosen.name;
 					}
-					await this.plugin.saveSettings();
-					notice.hide();
-					new Notice(`${t("notices.connectionSuccess")} — ${kbs.length}`);
-				} catch (err) {
-					notice.hide();
-					new Notice(err instanceof Error ? err.message : String(err));
+					// Programmatic population doesn't fire "change", so persist
+					// the effective selection here: keep the configured KB if it
+					// still exists, otherwise auto-select the first one.
+					const chosen = kbs.find((k) => k.id === config.knowledgeBaseId) ?? kbs[0]!;
+					selectEl.value = chosen.id;
+					config.knowledgeBaseId = chosen.id;
+					config.knowledgeBaseName = chosen.name;
 				}
-			}),
+				await this.plugin.saveSettings();
+				notice?.hide();
+				if (interactive) new Notice(`${t("notices.connectionSuccess")} — ${kbs.length}`);
+			} catch (err) {
+				notice?.hide();
+				if (interactive) new Notice(err instanceof Error ? err.message : String(err));
+			}
+		};
+		kbSetting.addButton((btn) =>
+			btn.setButtonText(t("settings.buttons.refresh")).onClick(() => void refreshKnowledgeBases(true)),
 		);
+		// Auto-load knowledge bases when the card opens with connection details
+		// already configured. Silent on failure so an unreachable server does
+		// not spam notices on every settings open.
+		if (config.baseUrl?.trim() && config.apiKey?.trim()) {
+			void refreshKnowledgeBases(false);
+		}
 
 		new Setting(containerEl).setName(t("settings.labels.enabled")).addToggle((tog) =>
 			tog.setValue(config.enabled).onChange(async (v) => {
