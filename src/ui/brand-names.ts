@@ -7,4 +7,4 @@ export const YOUDAO_NAME = "Youdao Note";
 export const FLOMO_NAME = "Flomo";
 export const YINXIANG_NAME = "Yinxiang";
 export const WEKNORA_NAME = "WeKnora";
-export const PLUGIN_NAME = "Cross-App Notes Bridge";
+export const PLUGIN_NAME = "Notes Bridge";

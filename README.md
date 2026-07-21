@@ -1,4 +1,4 @@
-# Cross-App Notes Bridge
+# Notes Bridge
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
@@ -59,11 +59,11 @@ Export notes to and import notes from Yinxiang via its REST API at `https://app.
 
 ### Context menu
 
-Right-click any file in the file explorer (or select multiple files) to find the **Cross-App Notes Bridge** submenu with all available actions.
+Right-click any file in the file explorer (or select multiple files) to find the **Notes Bridge** submenu with all available actions.
 
 ## Settings
 
-Configure via **Settings → Community plugins → Cross-App Notes Bridge**.
+Configure via **Settings → Community plugins → Notes Bridge**.
 
 - **Export folder** — directory for exported notes (default: `Exports`)
 - **Import folder** — directory for imported notes (default: `Imports`)

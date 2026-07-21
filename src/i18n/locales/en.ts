@@ -1,6 +1,6 @@
 export const en = {
 	plugin: {
-		name: "Cross-App Notes Bridge",
+		name: "Notes Bridge",
 	},
 	commands: {
 		copyAsMarkdown: "Copy as pure Markdown",
@@ -190,6 +190,6 @@ export const en = {
 		flomo: "Flomo",
 		yinxiang: "Yinxiang",
 		weknora: "WeKnora",
-		plugin: "Cross-App Notes Bridge",
+		plugin: "Notes Bridge",
 	},
 } as const;

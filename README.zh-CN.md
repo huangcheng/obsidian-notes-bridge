@@ -1,4 +1,4 @@
-# Cross-App Notes Bridge
+# Notes Bridge
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
@@ -59,11 +59,11 @@
 
 ### 右键菜单
 
-在文件管理器里右键任意文件（或先多选再右键），就能在 **Cross-App Notes Bridge** 子菜单里找到所有可用动作。
+在文件管理器里右键任意文件（或先多选再右键），就能在 **Notes Bridge** 子菜单里找到所有可用动作。
 
 ## 设置
 
-入口：**Settings → Community plugins → Cross-App Notes Bridge**。
+入口：**Settings → Community plugins → Notes Bridge**。
 
 - **导出文件夹** —— 导出笔记的目录（默认：`Exports`）
 - **导入文件夹** —— 导入笔记的目录（默认：`Imports`）
