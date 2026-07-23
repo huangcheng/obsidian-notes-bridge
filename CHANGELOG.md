@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.2] - 2026-07-24
+
+### Added
+
+- Plugin icon (generated with Alibaba Wan 2.2) shown in the README headers.
+- GitHub Actions release workflow that builds and attaches build-provenance attestations to the release artifacts (`main.js`, `manifest.json`, `styles.css`).
+- `getSettingDefinitions()` hook returning an empty set, preserving the custom card-based settings UI on Obsidian 1.13+ while satisfying the declarative-settings check.
+
+### Changed
+
+- Documented plugin capabilities and permissions (CLI subprocesses, out-of-vault filesystem access, clipboard) and disclosed that the dynamic-code-execution notice comes from Ajv inside the bundled MCP SDK.
+
+### Fixed
+
+- Cleared the Obsidian plugin-review lint errors: inline style assignments replaced with a CSS class toggle, the misused-promise callback wrapped, Bear timers switched to `window`, the CSS `color-mix()` fallback moved under `@supports`, and an IMA `no-base-to-string` regression guarded.
+
 ## [0.2.1] - 2026-07-23
 
 ### Added

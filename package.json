@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-notes-bridge",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"description": "Obsidian plugin that exports notes as portable Markdown and bridges your vault with Bear, WPS Cloud Note, Youdao Note, Flomo, Yinxiang, WeKnora, and IMA.",
 	"main": "main.js",
 	"type": "module",
