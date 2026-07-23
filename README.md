@@ -1,4 +1,4 @@
-# Notes Bridge
+# <img src="assets/icon.png" alt="" width="32"> Notes Bridge
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
