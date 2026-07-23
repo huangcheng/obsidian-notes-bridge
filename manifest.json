@@ -3,7 +3,7 @@
 	"name": "Notes Bridge",
 	"version": "0.2.0",
 	"minAppVersion": "1.4.0",
-	"description": "Copy notes as portable Markdown and bridge with Bear, WPS Cloud Note, Youdao Note, Flomo, Yinxiang, and WeKnora.",
+	"description": "Copy notes as portable Markdown and bridge with Bear, WPS Cloud Note, Youdao Note, Flomo, Yinxiang, WeKnora, and IMA (Tencent).",
 	"author": "HUANG Cheng",
 	"authorUrl": "https://github.com/huangcheng",
 	"isDesktopOnly": true

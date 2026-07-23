@@ -1,6 +1,6 @@
 import { Provider } from "./provider";
 
-export type ProviderKind = "cli" | "mcp" | "http" | "bear" | "wps" | "youdao" | "flomo" | "yinxiang" | "weknora";
+export type ProviderKind = "cli" | "mcp" | "http" | "bear" | "wps" | "youdao" | "flomo" | "yinxiang" | "weknora" | "ima";
 
 export interface ProviderConfigBase {
 	id: string;

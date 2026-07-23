@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-advanced-import-export",
+	"name": "obsidian-notes-bridge",
 	"version": "0.2.0",
-	"description": "Obsidian plugin for portable Markdown export, Bear bridge, and pluggable CLI/MCP/HTTP import-export providers.",
+	"description": "Obsidian plugin that exports notes as portable Markdown and bridges your vault with Bear, WPS Cloud Note, Youdao Note, Flomo, Yinxiang, WeKnora, and IMA.",
 	"main": "main.js",
 	"type": "module",
 	"pnpm": {
@@ -19,7 +19,14 @@
 		"obsidian-plugin",
 		"import",
 		"export",
+		"markdown",
 		"bear",
+		"wps",
+		"youdao",
+		"flomo",
+		"yinxiang",
+		"weknora",
+		"ima",
 		"mcp"
 	],
 	"license": "0-BSD",

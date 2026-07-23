@@ -1,4 +1,4 @@
-import { App, Notice, PluginSettingTab, Setting } from "obsidian";
+import { App, ButtonComponent, Notice, PluginSettingTab, Setting, ToggleComponent } from "obsidian";
 import type AdvancedImportExportPlugin from "../main";
 import { t } from "../i18n";
 import { BearProvider, BearProviderConfig } from "../providers/bear/bear-provider";
@@ -11,7 +11,7 @@ import { WpsProviderConfig } from "../providers/wps/types";
 import { YoudaoProvider } from "../providers/youdao/youdao-provider";
 import { YinxiangProvider } from "../providers/yinxiang/yinxiang-provider";
 import { YinxiangProviderConfig, YINXIANG_OAUTH_URL } from "../providers/yinxiang/types";
-import { BEAR_NAME, FLOMO_NAME, WPS_NAME, WEKNORA_NAME, YOUDAO_NAME, YINXIANG_NAME } from "../ui/brand-names";
+import { BEAR_NAME, FLOMO_NAME, WPS_NAME, WEKNORA_NAME, YOUDAO_NAME, YINXIANG_NAME, IMA_NAME } from "../ui/brand-names";
 import {
 	YOUDAO_API_KEY_URL,
 	YOUDAO_INSTALL_CMD,
@@ -20,6 +20,9 @@ import {
 } from "../providers/youdao/types";
 import { WeknoraProvider } from "../providers/weknora/weknora-provider";
 import { WEKNORA_TOKEN_HELP_URL, WeknoraProviderConfig } from "../providers/weknora/types";
+import { ImaProvider } from "../providers/ima/ima-provider";
+import { IMA_HELP_URL, ImaProviderConfig } from "../providers/ima/types";
+import { RemoteTargetItem, RemoteTargetPickerModal } from "../ui/remote-target-picker";
 
 /**
  * Lucide icon SVGs for provider cards.
@@ -201,6 +204,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				flomo: t("brands.flomo"),
 				yinxiang: t("brands.yinxiang"),
 				weknora: t("brands.weknora"),
+				ima: t("brands.ima"),
 			}),
 		});
 
@@ -229,6 +233,9 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				return;
 			case "weknora":
 				this.renderWeknoraProvider(containerEl, config as WeknoraProviderConfig);
+				return;
+			case "ima":
+				this.renderImaProvider(containerEl, config as ImaProviderConfig);
 				return;
 			default:
 				containerEl.createEl("p", {
@@ -261,6 +268,42 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 		// Title
 		const info = summaryContent.createDiv({ cls: "aie-provider-info" });
 		info.createDiv({ cls: "aie-provider-title", text: title });
+
+		// "Configuration incomplete" hint: enabled but not available providers
+		// are hidden from the export submenu — surface why in the header.
+		if (config.enabled !== false) {
+			const provider = this.plugin.registry.get(config.id);
+			const avail = provider?.available?.();
+			if (avail && !avail.ok) {
+				info.createDiv({
+					cls: "aie-provider-status aie-provider-status--incomplete",
+					text: t("providers.incompleteConfig"),
+				});
+			}
+		}
+
+		// Enabled toggle in the header so users can toggle without expanding.
+		// Obsidian/Electron is Chromium: clicking a focusable form control inside
+		// <summary> does not toggle <details>; stopPropagation is an extra safety net.
+		const enabledWrap = summary.createDiv({ cls: "aie-provider-enabled" });
+		enabledWrap.setAttr("aria-label", t("settings.labels.enabled"));
+		enabledWrap.setAttr("title", t("settings.labels.enabled"));
+		new ToggleComponent(enabledWrap)
+			.setValue(config.enabled)
+			.onChange(async (v) => {
+				config.enabled = v;
+				details.setAttr("data-enabled", String(v));
+				await this.plugin.saveSettings();
+				if (v) {
+					const provider = this.plugin.registry.get(config.id);
+					const avail = provider?.available?.();
+					if (avail && !avail.ok) {
+						details.open = true;
+						new Notice(t("providers.configureFirst", { provider: title }));
+					}
+				}
+			});
+		enabledWrap.addEventListener("click", (e) => e.stopPropagation());
 
 		// Expand chevron
 		const expandIcon = summary.createSpan({ cls: "aie-provider-expand-icon" });
@@ -381,12 +424,6 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				);
 		}
 
-		new Setting(containerEl).setName(t("settings.labels.enabled")).addToggle((tog) =>
-			tog.setValue(config.enabled).onChange(async (v) => {
-				config.enabled = v;
-				await this.plugin.saveSettings();
-			}),
-		);
 
 		new Setting(containerEl)
 			.setName(t("settings.labels.testConnection"))
@@ -463,24 +500,29 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				}),
 			);
 
-		new Setting(containerEl)
-			.setName(t("settings.labels.defaultFolderId"))
-			.setDesc(t("settings.descriptions.defaultFolderId"))
-			.addText((text) =>
-				text
-					.setValue(config.defaultFolderId ?? "")
-					.onChange(async (v) => {
-						config.defaultFolderId = v.trim() || undefined;
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		new Setting(containerEl).setName(t("settings.labels.enabled")).addToggle((tog) =>
-			tog.setValue(config.enabled).onChange(async (v) => {
-				config.enabled = v;
+		this.renderRemoteTargetRow({
+			containerEl,
+			name: t("settings.labels.defaultFolderId"),
+			description: t("settings.descriptions.defaultFolderId"),
+			currentId: config.defaultFolderId,
+			currentName: config.defaultFolderName,
+			onChoose: async (item) => {
+				config.defaultFolderId = item.id;
+				config.defaultFolderName = item.name;
 				await this.plugin.saveSettings();
-			}),
-		);
+			},
+			onClear: async () => {
+				config.defaultFolderId = undefined;
+				config.defaultFolderName = undefined;
+				await this.plugin.saveSettings();
+			},
+			loadItems: async () => new YoudaoProvider(config).listFolders(),
+			noneLabel: t("settings.labels.noTarget"),
+			loadingLabel: t("providers.loadingTargets"),
+			emptyLabel: t("providers.noTargets"),
+			pickPlaceholder: t("providers.pickTarget"),
+		});
+
 
 		new Setting(containerEl)
 			.setName(t("settings.labels.detectCli"))
@@ -571,12 +613,6 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl).setName(t("settings.labels.enabled")).addToggle((tog) =>
-			tog.setValue(config.enabled).onChange(async (v) => {
-				config.enabled = v;
-				await this.plugin.saveSettings();
-			}),
-		);
 
 		new Setting(containerEl)
 			.setName(t("settings.labels.testConnection"))
@@ -626,24 +662,30 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				});
 			});
 
-		new Setting(containerEl)
-			.setName(t("settings.labels.defaultFolderId"))
-			.setDesc("Optional. Notebook GUID for new notes. Leave empty for the default notebook.")
-			.addText((text) =>
-				text
-					.setValue(config.defaultNotebookGuid ?? "")
-					.onChange(async (v) => {
-						config.defaultNotebookGuid = v.trim() || undefined;
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		new Setting(containerEl).setName(t("settings.labels.enabled")).addToggle((tog) =>
-			tog.setValue(config.enabled).onChange(async (v) => {
-				config.enabled = v;
+		this.renderRemoteTargetRow({
+			containerEl,
+			name: t("settings.labels.defaultFolderId"),
+			description: t("settings.descriptions.yinxiangNotebook"),
+			currentId: config.defaultNotebookGuid,
+			currentName: config.defaultNotebookName,
+			onChoose: async (item) => {
+				config.defaultNotebookGuid = item.id;
+				config.defaultNotebookName = item.name;
 				await this.plugin.saveSettings();
-			}),
-		);
+			},
+			onClear: async () => {
+				config.defaultNotebookGuid = undefined;
+				config.defaultNotebookName = undefined;
+				await this.plugin.saveSettings();
+			},
+			loadItems: async () =>
+				(await new YinxiangProvider(config).listNoteBooks()).map((nb) => ({ id: nb.guid, name: nb.name })),
+			noneLabel: t("settings.labels.noTarget"),
+			loadingLabel: t("providers.loadingTargets"),
+			emptyLabel: t("providers.noTargets"),
+			pickPlaceholder: t("providers.pickTarget"),
+		});
+
 
 		new Setting(containerEl)
 			.setName(t("settings.labels.testConnection"))
@@ -708,79 +750,33 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				});
 			});
 
-		const kbSetting = new Setting(containerEl)
-			.setName(t("settings.labels.knowledgeBase"))
-			.setDesc(t("settings.descriptions.weknoraKnowledgeBase"));
-		const selectEl = kbSetting.controlEl.createEl("select");
-		const placeholder = document.createElement("option");
-		placeholder.value = "";
-		placeholder.text = config.knowledgeBaseName || t("providers.weknoraNoKb");
-		selectEl.appendChild(placeholder);
-		selectEl.value = config.knowledgeBaseId ?? "";
-		selectEl.addEventListener("change", () => {
-			const id = selectEl.value;
-			const name = selectEl.selectedOptions[0]?.dataset.name ?? "";
-			config.knowledgeBaseId = id || undefined;
-			config.knowledgeBaseName = id ? name : undefined;
-			void this.plugin.saveSettings();
+		this.renderRemoteTargetRow({
+			containerEl,
+			name: t("settings.labels.knowledgeBase"),
+			description: t("settings.descriptions.weknoraKnowledgeBase"),
+			currentId: config.knowledgeBaseId,
+			currentName: config.knowledgeBaseName,
+			onChoose: async (item) => {
+				config.knowledgeBaseId = item.id;
+				config.knowledgeBaseName = item.name;
+				await this.plugin.saveSettings();
+			},
+			onClear: async () => {
+				config.knowledgeBaseId = undefined;
+				config.knowledgeBaseName = undefined;
+				await this.plugin.saveSettings();
+			},
+			loadItems: async () =>
+				(await new WeknoraProvider(config).listKnowledgeBases()).map((kb) => ({
+					id: kb.id,
+					name: `${kb.name} (${kb.type})`,
+				})),
+			noneLabel: t("settings.labels.noTarget"),
+			loadingLabel: t("providers.loadingTargets"),
+			emptyLabel: t("providers.noTargets"),
+			pickPlaceholder: t("providers.pickTarget"),
 		});
-		const refreshKnowledgeBases = async (interactive: boolean): Promise<void> => {
-			const provider = this.plugin.registry.get(config.id) as WeknoraProvider | null;
-			if (!provider) {
-				if (interactive) new Notice(t("providers.notEnabled"));
-				return;
-			}
-			const notice = interactive ? new Notice(t("notices.connectionTesting"), 0) : null;
-			try {
-				const kbs = await provider.listKnowledgeBases();
-				while (selectEl.options.length > 0) selectEl.remove(0);
-				if (kbs.length === 0) {
-					const opt = document.createElement("option");
-					opt.value = "";
-					opt.text = t("providers.weknoraNoKb");
-					selectEl.appendChild(opt);
-					config.knowledgeBaseId = undefined;
-					config.knowledgeBaseName = undefined;
-				} else {
-					for (const kb of kbs) {
-						const opt = document.createElement("option");
-						opt.value = kb.id;
-						opt.text = `${kb.name} (${kb.type})`;
-						opt.dataset.name = kb.name;
-						selectEl.appendChild(opt);
-					}
-					// Programmatic population doesn't fire "change", so persist
-					// the effective selection here: keep the configured KB if it
-					// still exists, otherwise auto-select the first one.
-					const chosen = kbs.find((k) => k.id === config.knowledgeBaseId) ?? kbs[0]!;
-					selectEl.value = chosen.id;
-					config.knowledgeBaseId = chosen.id;
-					config.knowledgeBaseName = chosen.name;
-				}
-				await this.plugin.saveSettings();
-				notice?.hide();
-				if (interactive) new Notice(`${t("notices.connectionSuccess")} — ${kbs.length}`);
-			} catch (err) {
-				notice?.hide();
-				if (interactive) new Notice(err instanceof Error ? err.message : String(err));
-			}
-		};
-		kbSetting.addButton((btn) =>
-			btn.setButtonText(t("settings.buttons.refresh")).onClick(() => void refreshKnowledgeBases(true)),
-		);
-		// Auto-load knowledge bases when the card opens with connection details
-		// already configured. Silent on failure so an unreachable server does
-		// not spam notices on every settings open.
-		if (config.baseUrl?.trim() && config.apiKey?.trim()) {
-			void refreshKnowledgeBases(false);
-		}
 
-		new Setting(containerEl).setName(t("settings.labels.enabled")).addToggle((tog) =>
-			tog.setValue(config.enabled).onChange(async (v) => {
-				config.enabled = v;
-				await this.plugin.saveSettings();
-			}),
-		);
 
 		new Setting(containerEl)
 			.setName(t("settings.labels.testConnection"))
@@ -797,6 +793,182 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 					new Notice(result?.message ?? (result?.ok ? t("notices.connectionSuccess") : t("notices.connectionFailed")));
 				}),
 			);
+	}
+
+	private renderImaProvider(parentEl: HTMLElement, config: ImaProviderConfig): void {
+		const containerEl = this.openCollapsibleCard(
+			parentEl,
+			config.displayName || t("brands.ima"),
+			config,
+		);
+		const intro = containerEl.createEl("p");
+		intro.appendText(t("providers.imaIntro", { provider: IMA_NAME }) + " ");
+		intro
+			.createEl("a", {
+				text: t("providers.getImaToken"),
+				href: IMA_HELP_URL,
+			})
+			.setAttr("target", "_blank");
+
+		new Setting(containerEl).setName(t("settings.labels.displayName")).addText((text) =>
+			text.setValue(config.displayName).onChange(async (v) => {
+				config.displayName = v.trim() || t("brands.ima");
+				await this.plugin.saveSettings();
+			}),
+		);
+
+		new Setting(containerEl)
+			.setName(t("settings.labels.clientId"))
+			.setDesc(t("settings.descriptions.imaClientId"))
+			.addText((text) =>
+				text
+					.setValue(config.clientId ?? "")
+					.onChange(async (v) => {
+						config.clientId = v.trim() || undefined;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(t("settings.labels.apiKey"))
+			.setDesc(t("settings.descriptions.imaApiKey"))
+			.addText((text) => {
+				text.inputEl.type = "password";
+				text.setValue(config.apiKey ?? "").onChange(async (v) => {
+					config.apiKey = v.trim() || undefined;
+					await this.plugin.saveSettings();
+				});
+			});
+
+		// Target folder picker (shared remote-target selector).
+		this.renderRemoteTargetRow({
+			containerEl,
+			name: t("settings.labels.imaTargetFolder"),
+			description: t("settings.descriptions.imaFolder"),
+			currentId: config.defaultFolderId,
+			currentName: config.defaultFolderName,
+			onChoose: async (item) => {
+				config.defaultFolderId = item.id;
+				config.defaultFolderName = item.name;
+				await this.plugin.saveSettings();
+			},
+			onClear: async () => {
+				config.defaultFolderId = undefined;
+				config.defaultFolderName = undefined;
+				await this.plugin.saveSettings();
+			},
+			loadItems: async () => new ImaProvider(config).listFolders(),
+			noneLabel: t("settings.labels.noTarget"),
+			loadingLabel: t("providers.loadingTargets"),
+			emptyLabel: t("providers.noTargets"),
+			pickPlaceholder: t("providers.pickTarget"),
+		});
+
+
+		new Setting(containerEl)
+			.setName(t("settings.labels.testConnection"))
+			.addButton((btn) =>
+				btn.setButtonText(t("settings.buttons.test")).onClick(async () => {
+					const provider = this.plugin.registry.get(config.id) as ImaProvider | null;
+					if (!provider) {
+						new Notice(t("providers.notEnabled"));
+						return;
+					}
+					const notice = new Notice(t("notices.connectionTesting"), 0);
+					const result = await provider.testConnection?.();
+					notice.hide();
+					new Notice(result?.message ?? (result?.ok ? t("notices.connectionSuccess") : t("notices.connectionFailed")));
+				}),
+			);
+	}
+
+	/**
+	 * Shared "Target" selector row for providers that expose a remote list
+	 * method (IMA folders, Yinxiang notebooks, WeKnora knowledge bases).
+	 * Renders the current selection, a Clear button (hidden when nothing
+	 * is selected), and a Choose button that loads items and opens
+	 * {@link RemoteTargetPickerModal}.
+	 */
+	private renderRemoteTargetRow(opts: {
+		containerEl: HTMLElement;
+		name: string;
+		description?: string;
+		currentId?: string;
+		currentName?: string;
+		onChoose: (item: RemoteTargetItem) => Promise<void> | void;
+		onClear: () => Promise<void> | void;
+		loadItems: () => Promise<RemoteTargetItem[]>;
+		noneLabel: string;
+		loadingLabel: string;
+		emptyLabel: string;
+		pickPlaceholder?: string;
+	}): void {
+		const setting = new Setting(opts.containerEl).setName(opts.name);
+		if (opts.description) setting.setDesc(opts.description);
+		setting.controlEl.addClass("aie-target-control");
+
+		const targetText = opts.currentName?.trim() || opts.currentId?.trim() || opts.noneLabel;
+		const valueEl = setting.controlEl.createSpan({
+			cls: "aie-remote-target-value",
+			text: targetText,
+		});
+		valueEl.setAttr("title", targetText);
+
+		let clearButton!: ButtonComponent;
+		setting.addButton((btn) => {
+			clearButton = btn;
+			btn.setButtonText(t("settings.buttons.clear")).onClick(async () => {
+				await opts.onClear();
+				valueEl.setText(opts.noneLabel);
+				valueEl.setAttr("title", opts.noneLabel);
+				btn.buttonEl.style.display = "none";
+			});
+		});
+		setting.addButton((btn) =>
+			btn.setButtonText(t("settings.buttons.choose")).onClick(() => void this.pickRemoteTarget(opts, valueEl, clearButton)),
+		);
+		if (!opts.currentId?.trim() && !opts.currentName?.trim()) {
+			clearButton.buttonEl.style.display = "none";
+		}
+	}
+
+	private async pickRemoteTarget(
+		opts: {
+			loadItems: () => Promise<RemoteTargetItem[]>;
+			onChoose: (item: RemoteTargetItem) => Promise<void> | void;
+			loadingLabel: string;
+			emptyLabel: string;
+			pickPlaceholder?: string;
+		},
+		valueEl: HTMLElement,
+		clearButton: ButtonComponent,
+	): Promise<void> {
+		const notice = new Notice(opts.loadingLabel, 0);
+		let items: RemoteTargetItem[];
+		try {
+			items = await opts.loadItems();
+		} catch (err) {
+			notice.hide();
+			new Notice(err instanceof Error ? err.message : String(err));
+			return;
+		}
+		notice.hide();
+		if (items.length === 0) {
+			new Notice(opts.emptyLabel);
+			return;
+		}
+		new RemoteTargetPickerModal(
+			this.app,
+			items,
+			async (picked) => {
+				if (!picked) return;
+				await opts.onChoose(picked);
+				valueEl.setText(picked.name);
+				valueEl.setAttr("title", picked.name);
+				clearButton.buttonEl.style.display = "";
+			},
+			opts.pickPlaceholder,
+		).open();
 	}
 
 	private showYoudaoInstallNotice(reason: string): void {
@@ -883,15 +1055,6 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				);
 		}
 
-		new Setting(containerEl)
-			.setName(t("settings.labels.enabled"))
-			.setDesc(t("settings.descriptions.enabled", { provider: BEAR_NAME }))
-			.addToggle((tog) =>
-				tog.setValue(config.enabled).onChange(async (v) => {
-					config.enabled = v;
-					await this.plugin.saveSettings();
-				}),
-			);
 
 		new Setting(containerEl)
 			.setName(t("settings.labels.testConnection"))

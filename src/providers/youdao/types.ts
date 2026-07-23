@@ -6,6 +6,8 @@ export interface YoudaoProviderConfig extends ProviderConfigBase {
 	apiKey?: string;
 	/** Folder ID under which to save new notes. Empty = "我的资源/收藏笔记". */
 	defaultFolderId?: string;
+	/** Display name of the chosen folder (for the settings UI). */
+	defaultFolderName?: string;
 	/** Override CLI binary path. Default: `youdaonote` (resolved via PATH). */
 	cliPath?: string;
 }

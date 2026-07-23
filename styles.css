@@ -72,6 +72,14 @@
 	outline-offset: -2px;
 }
 
+/* Subtle hover affordance for the clickable card header */
+.aie-provider-card summary {
+	transition: background-color 80ms ease;
+}
+.aie-provider-card summary:hover {
+	background-color: var(--background-modifier-hover);
+}
+
 /* Summary content (icon + title + status) */
 .aie-provider-summary-content {
 	display: flex;
@@ -229,4 +237,70 @@
 
 .aie-section-card > .setting-item:last-of-type {
 	border-bottom: none;
+}
+
+/* ---------- Remote Target Selector (folder/notebook/knowledge-base picker) ---------- */
+/* Value span + Choose/Clear buttons in a provider card control area.
+   Long target names truncate with an ellipsis (full name still readable
+   via the span's title tooltip), and the buttons never get pushed
+   off-screen, even on narrow settings panels. */
+.aie-target-control {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	justify-content: flex-end;
+	min-width: 0;
+}
+
+.aie-remote-target-value {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 12rem;
+	min-width: 0;
+	color: var(--text-muted);
+	font-size: 0.85em;
+}
+
+.aie-target-control button {
+	flex-shrink: 0;
+}
+
+/* Keep text inputs within provider cards from overflowing on narrow panels */
+.aie-provider-body .setting-item-control input[type="text"],
+.aie-provider-body .setting-item-control input[type="password"] {
+	min-width: 0;
+	max-width: 100%;
+}
+
+/* ---------- Enabled toggle in the provider card header ---------- */
+.aie-provider-enabled {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+	margin-right: 0.25rem;
+	cursor: pointer;
+}
+
+/* Incomplete-configuration hint: a scannable warning badge under the title */
+.aie-provider-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	margin-top: 0.2rem;
+	padding: 0.1rem 0.45rem;
+	border-radius: 10px;
+	font-size: 0.72em;
+	line-height: 1.4;
+	align-self: flex-start;
+}
+.aie-provider-status--incomplete {
+	color: var(--text-warning, var(--text-muted));
+	background: color-mix(in srgb, var(--text-warning, var(--text-muted)) 14%, transparent);
+}
+.aie-provider-status--incomplete::before {
+	content: "⚠";
+	font-size: 0.95em;
+	line-height: 1;
 }

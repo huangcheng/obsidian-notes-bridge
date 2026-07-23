@@ -12,6 +12,7 @@ export const zh = {
 		sendToFlomo: "发送活动笔记到 Flomo…",
 		sendToYinxiang: "发送活动笔记到印象笔记…",
 		sendToWeknora: "发送活动笔记到 WeKnora\u2026",
+		sendToIma: "发送活动笔记到 IMA\u2026",
 	},
 	notices: {
 		noActiveNote: "没有活动笔记可复制",
@@ -76,9 +77,12 @@ export const zh = {
 			apiKey: "API 密钥",
 			apiToken: "API 令牌",
 			apiUrl: "API 地址",
+			clientId: "客户端 ID",
 			knowledgeBase: "知识库",
 			writeToolName: "写入工具名称",
 			defaultFolderId: "默认文件夹 ID",
+			imaTargetFolder: "目标文件夹",
+			noTarget: "无",
 			detectCli: "检测 CLI",
 		},
 		descriptions: {
@@ -102,22 +106,28 @@ export const zh = {
 				"仅在本地存储。以 'Authorization: Bearer <token>' 形式发送到 https://flomoapp.com/mcp。",
 			weknoraApiUrl: "完整 API 地址（含 /api/v1），例如 http://localhost:8080/api/v1。",
 			weknoraApiKey: "仅在本地存储。每次请求以 X-API-Key 头发送。",
-			weknoraKnowledgeBase: "导出默认知识库。点击\u300c刷新\u300d从服务器加载列表。",
+			weknoraKnowledgeBase: "导出默认知识库。点击「选择」从服务器加载列表。",
+			imaClientId: "仅在本地存储。每次请求以 ima-openapi-clientid 头发送到 https://ima.qq.com。",
+			imaApiKey: "仅在本地存储。每次请求以 ima-openapi-apikey 头发送到 https://ima.qq.com。",
+			imaFolder: "选择新笔记在 IMA 中的保存位置。留空则使用默认位置。",
+			yinxiangNotebook: "导出默认笔记本。",
 			writeToolName:
 				"可选覆盖。留空则自动选择（write_note → write_memo → 第一个 write_*）。",
-			defaultFolderId: "可选。新笔记保存的文件夹 ID。留空则使用默认文件夹。",
+			defaultFolderId: "选择新笔记在有道云笔记中的保存位置。留空则使用默认位置。",
 			detectCli: "验证 CLI 是否已安装且可执行。",
 			enabled: "在命令和文件资源管理器子菜单中显示 {{provider}}。",
 			testConnection: "验证与提供商的连接。",
 		},
-		buttons: {
-			test: "测试",
-			refresh: "刷新",
-			detect: "检测",
-			saveToCli: "保存到 CLI",
-		},
+	buttons: {
+		test: "测试",
+		refresh: "刷新",
+		detect: "检测",
+		saveToCli: "保存到 CLI",
+		choose: "选择\u2026",
+		clear: "清除",
+	},
 		providerIntro:
-			"配置 {{bear}}、{{wps}}、{{youdao}}、{{flomo}}、{{yinxiang}}、{{weknora}} 的笔记源集成。每个提供商都会向插件命令和文件资源管理器右键菜单公开导入/导出操作。",
+			"配置 {{bear}}、{{wps}}、{{youdao}}、{{flomo}}、{{yinxiang}}、{{weknora}}、{{ima}} 的笔记源集成。每个提供商都会向插件命令和文件资源管理器右键菜单公开导入/导出操作。",
 
 		options: {
 			drop: "丢弃",
@@ -149,6 +159,8 @@ export const zh = {
 		notEnabled: "请先启用提供商，然后重试。",
 		unavailable: "{{provider}} 不可用",
 		enableInSettings: "在设置中启用此提供商",
+		configureFirst: "请先配置 {{provider}} 才能使用。",
+		incompleteConfig: "配置不完整 — 不会出现在菜单中",
 		testConnection: "测试连接",
 		connectionFailed: "连接失败",
 		connectionSuccess: "已连接",
@@ -177,6 +189,17 @@ export const zh = {
 			"通过 REST API 将笔记导出到自托管或云端 {{provider}} 实例。请在 WeKnora \u2192 设置 \u2192 集成 \u2192 API 创建具备完全访问或 ingest 权限的 API 密钥。",
 		getWeknoraToken: "在 GitHub 上打开 WeKnora",
 		weknoraNoKb: "尚未选择知识库。请先填写 API 地址与 API 密钥，再点击\u300c刷新\u300d。",
+		imaIntro:
+			"通过官方 OpenAPI 将笔记导出到 {{provider}}（腾讯 IMA）。笔记将发送到腾讯 IMA 服务器；你的客户端 ID 与 API 密钥仅本地存储于此 Vault，且仅会传输到 https://ima.qq.com。启用此提供商即视为同意。",
+		getImaToken: "获取 IMA 凭据",
+		imaUnreachable: "无法连接到 IMA 服务器。",
+		imaCreateFailed: "IMA 已接收请求但返回失败。",
+		imaReadUnsupported: "IMA 不支持回读笔记。",
+		imaIncompleteConfig: "请先在设置中填写客户端 ID 与 API 密钥。",
+		imaHttpError: "IMA 请求失败（HTTP {{status}}）{{detail}}",
+		loadingTargets: "正在加载\u2026",
+		noTargets: "未找到项目。",
+		pickTarget: "选择\u2026",
 
 	},
 	brands: {
@@ -186,6 +209,7 @@ export const zh = {
 		flomo: "Flomo",
 		yinxiang: "印象笔记",
 		weknora: "WeKnora",
+		ima: "IMA",
 		plugin: "跨应用笔记桥",
 
 	},

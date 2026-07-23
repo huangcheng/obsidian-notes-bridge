@@ -1,6 +1,7 @@
 import { BearProviderConfig, DEFAULT_BEAR_CONFIG } from "../providers/bear/bear-provider";
 import { bearAvailable } from "../providers/bear/url-scheme";
 import { DEFAULT_FLOMO_CONFIG, FlomoProviderConfig } from "../providers/flomo/types";
+import { DEFAULT_IMA_CONFIG, ImaProviderConfig } from "../providers/ima/types";
 import { ProviderConfigBase } from "../providers/registry";
 import { DEFAULT_WPS_CONFIG, WpsProviderConfig } from "../providers/wps/types";
 import { DEFAULT_YOUDAO_CONFIG, YoudaoProviderConfig } from "../providers/youdao/types";
@@ -15,6 +16,7 @@ export type ProviderConfig =
 	| FlomoProviderConfig
 	| YinxiangProviderConfig
 	| WeknoraProviderConfig
+	| ImaProviderConfig
 	| ProviderConfigBase;
 
 export interface PluginSettings {
@@ -87,6 +89,14 @@ export function applyDefaultProviderMigration(settings: PluginSettings): void {
 			id: "weknora",
 			displayName: "WeKnora",
 			...DEFAULT_WEKNORA_CONFIG,
+		};
+		settings.providers.push(cfg);
+	}
+	if (!settings.providers.some((p) => p.kind === "ima")) {
+		const cfg: ImaProviderConfig = {
+			id: "ima",
+			displayName: "IMA",
+			...DEFAULT_IMA_CONFIG,
 		};
 		settings.providers.push(cfg);
 	}

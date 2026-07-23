@@ -79,14 +79,6 @@ function readConfigServer(data: unknown): string | null {
 	return null;
 }
 
-interface YoudaoListEntry {
-	id?: string;
-	fileId?: string;
-	title?: string;
-	updatedAt?: string;
-	updateTime?: string;
-}
-
 interface YoudaoReadResult {
 	content?: string;
 	rawFormat?: string;
@@ -174,14 +166,25 @@ export class YoudaoProvider implements Provider {
 	async listRemote(opts?: ListOptions): Promise<RemoteListItem[]> {
 		this.assertDesktop();
 		const args = opts?.query
-			? ["search", opts.query, "--json"]
+			? ["search", opts.query]
 			: this.config.defaultFolderId
-				? ["list", "-f", this.config.defaultFolderId, "--json"]
-				: ["list", "--json"];
+				? ["list", "-f", this.config.defaultFolderId]
+				: ["list"];
 		const result = await runChild(this.binPath, args);
-		this.assertCliOk(result, args[0]!);
-		const parsed = tryParseJson<unknown>(result.stdout);
-		return readListItems(parsed);
+		this.assertCliOk(result, "list");
+		return parseYoudaoNotes(result.stdout);
+	}
+
+	/**
+	 * List the user's notebook folders (root level) for the settings picker.
+	 * Uses the CLI's default `list` output (v1.1.x has no `--json` on list),
+	 * parsing only the `📁`-prefixed folder lines. Single-page fetch.
+	 */
+	async listFolders(): Promise<{ id: string; name: string }[]> {
+		this.assertDesktop();
+		const result = await runChild(this.binPath, ["list"]);
+		this.assertCliOk(result, "list");
+		return parseYoudaoFolders(result.stdout);
 	}
 
 	async delete(remoteId: string): Promise<void> {
@@ -313,30 +316,61 @@ export class YoudaoProvider implements Provider {
 	}
 }
 
-function readListItems(data: unknown): RemoteListItem[] {
-	if (!data) return [];
-	let entries: unknown[] = [];
-	if (Array.isArray(data)) {
-		entries = data;
-	} else if (typeof data === "object") {
-		const obj = data as Record<string, unknown>;
-		if (Array.isArray(obj.notes)) entries = obj.notes;
-		else if (Array.isArray(obj.items)) entries = obj.items;
-		else if (Array.isArray(obj.results)) entries = obj.results;
-	}
+/**
+ * Parse the `youdaonote list`/`search` default text output into note
+ * entries. Only `📄`-prefixed lines are notes (folders use `📁` and are
+ * skipped). Each note line is `📄 <id>\t<title>.note`; falls back to a
+ * whitespace split if the tab separator is absent. The trailing `.note`
+ * extension is stripped from the title.
+ */
+function parseYoudaoNotes(stdout: string): RemoteListItem[] {
 	const out: RemoteListItem[] = [];
-	for (const e of entries) {
-		if (!e || typeof e !== "object") continue;
-		const r = e as YoudaoListEntry;
-		const remoteId = r.fileId ?? r.id;
-		if (typeof remoteId !== "string" || !remoteId) continue;
-		const item: RemoteListItem = {
-			remoteId,
-			title: typeof r.title === "string" ? r.title : "Untitled",
-		};
-		if (r.updatedAt) item.updatedAt = r.updatedAt;
-		else if (r.updateTime) item.updatedAt = r.updateTime;
-		out.push(item);
+	for (const raw of stdout.split(/\r?\n/)) {
+		const line = raw.trim();
+		if (!line.startsWith("📄")) continue; // notes only; folders (📁) skipped
+		const rest = line.replace(/^📄\s*/, "");
+		const sep = rest.indexOf("\t");
+		let id = "";
+		let title = "";
+		if (sep >= 0) {
+			id = rest.slice(0, sep).trim();
+			title = rest.slice(sep + 1).trim();
+		} else {
+			const m = rest.match(/^(\S+)\s+(.*)$/);
+			id = m?.[1] ?? "";
+			title = m?.[2] ?? "";
+		}
+		if (!id || !title) continue;
+		if (title.toLowerCase().endsWith(".note")) title = title.slice(0, -".note".length);
+		out.push({ remoteId: id, title });
+	}
+	return out;
+}
+
+/**
+ * Parse the `youdaonote list` default text output into folder entries.
+ * Only `📁`-prefixed lines are folders (notes use a different glyph).
+ * Each folder line is `📁 <id>\t<name>`; falls back to whitespace split
+ * if the tab separator is absent.
+ */
+function parseYoudaoFolders(stdout: string): { id: string; name: string }[] {
+	const out: { id: string; name: string }[] = [];
+	for (const raw of stdout.split(/\r?\n/)) {
+		const line = raw.trim();
+		if (!line.startsWith("📁")) continue; // folders only; notes use a different glyph
+		const rest = line.replace(/^📁\s*/, "");
+		const sep = rest.indexOf("\t");
+		let id = "";
+		let name = "";
+		if (sep >= 0) {
+			id = rest.slice(0, sep).trim();
+			name = rest.slice(sep + 1).trim();
+		} else {
+			const m = rest.match(/^(\S+)\s+(.*)$/);
+			id = m?.[1] ?? "";
+			name = m?.[2] ?? "";
+		}
+		if (id && name) out.push({ id, name });
 	}
 	return out;
 }
