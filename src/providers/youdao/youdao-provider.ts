@@ -165,13 +165,16 @@ export class YoudaoProvider implements Provider {
 
 	async listRemote(opts?: ListOptions): Promise<RemoteListItem[]> {
 		this.assertDesktop();
-		const args = opts?.query
-			? ["search", opts.query]
-			: this.config.defaultFolderId
-				? ["list", "-f", this.config.defaultFolderId]
-				: ["list"];
+		let args: string[];
+		if (opts?.query) {
+			args = ["search", opts.query];
+		} else if (this.config.defaultFolderId) {
+			args = ["list", "-f", this.config.defaultFolderId];
+		} else {
+			args = ["list"];
+		}
 		const result = await runChild(this.binPath, args);
-		this.assertCliOk(result, "list");
+		this.assertCliOk(result, opts?.query ? "search" : "list");
 		return parseYoudaoNotes(result.stdout);
 	}
 
@@ -317,48 +320,16 @@ export class YoudaoProvider implements Provider {
 }
 
 /**
- * Parse the `youdaonote list`/`search` default text output into note
- * entries. Only `📄`-prefixed lines are notes (folders use `📁` and are
- * skipped). Each note line is `📄 <id>\t<title>.note`; falls back to a
- * whitespace split if the tab separator is absent. The trailing `.note`
- * extension is stripped from the title.
+ * Parse `youdaonote list`/`search` text output. Each matching line is
+ * `<emoji> <id>\t<name>` (or whitespace-separated if no tab).
  */
-function parseYoudaoNotes(stdout: string): RemoteListItem[] {
-	const out: RemoteListItem[] = [];
-	for (const raw of stdout.split(/\r?\n/)) {
-		const line = raw.trim();
-		if (!line.startsWith("📄")) continue; // notes only; folders (📁) skipped
-		const rest = line.replace(/^📄\s*/, "");
-		const sep = rest.indexOf("\t");
-		let id = "";
-		let title = "";
-		if (sep >= 0) {
-			id = rest.slice(0, sep).trim();
-			title = rest.slice(sep + 1).trim();
-		} else {
-			const m = rest.match(/^(\S+)\s+(.*)$/);
-			id = m?.[1] ?? "";
-			title = m?.[2] ?? "";
-		}
-		if (!id || !title) continue;
-		if (title.toLowerCase().endsWith(".note")) title = title.slice(0, -".note".length);
-		out.push({ remoteId: id, title });
-	}
-	return out;
-}
-
-/**
- * Parse the `youdaonote list` default text output into folder entries.
- * Only `📁`-prefixed lines are folders (notes use a different glyph).
- * Each folder line is `📁 <id>\t<name>`; falls back to whitespace split
- * if the tab separator is absent.
- */
-function parseYoudaoFolders(stdout: string): { id: string; name: string }[] {
+function parseYoudaoEntries(stdout: string, emoji: string): { id: string; name: string }[] {
 	const out: { id: string; name: string }[] = [];
+	const prefix = new RegExp(`^${emoji}\\s*`);
 	for (const raw of stdout.split(/\r?\n/)) {
 		const line = raw.trim();
-		if (!line.startsWith("📁")) continue; // folders only; notes use a different glyph
-		const rest = line.replace(/^📁\s*/, "");
+		if (!line.startsWith(emoji)) continue;
+		const rest = line.replace(prefix, "");
 		const sep = rest.indexOf("\t");
 		let id = "";
 		let name = "";
@@ -373,6 +344,27 @@ function parseYoudaoFolders(stdout: string): { id: string; name: string }[] {
 		if (id && name) out.push({ id, name });
 	}
 	return out;
+}
+
+/**
+ * Parse the `youdaonote list` default text output into note entries.
+ * Only `📄`-prefixed lines are notes (folders use `📁` and are skipped);
+ * a trailing `.note` extension is stripped from the title.
+ */
+function parseYoudaoNotes(stdout: string): RemoteListItem[] {
+	return parseYoudaoEntries(stdout, "📄").map((e) => {
+		let title = e.name;
+		if (title.toLowerCase().endsWith(".note")) title = title.slice(0, -".note".length);
+		return { remoteId: e.id, title };
+	});
+}
+
+/**
+ * Parse the `youdaonote list` default text output into folder entries.
+ * Only `📁`-prefixed lines are folders (notes use a different glyph).
+ */
+function parseYoudaoFolders(stdout: string): { id: string; name: string }[] {
+	return parseYoudaoEntries(stdout, "📁");
 }
 
 export const youdaoFactory: ProviderFactory<YoudaoProviderConfig> = {

@@ -9,14 +9,14 @@ export interface RemoteTargetItem {
 /**
  * Generic fuzzy-picker modal for choosing a remote target. Shared by the
  * IMA / Yinxiang / WeKnora settings cards' target-selector rows.
- * `onChoose` fires with the picked item, or is not called if the modal is
- * dismissed without a selection.
+ * `onChoose` is invoked with the picked item; it is not called if the
+ * modal is dismissed without a selection.
  */
 export class RemoteTargetPickerModal extends FuzzySuggestModal<RemoteTargetItem> {
 	constructor(
 		app: App,
 		private readonly items: RemoteTargetItem[],
-		private readonly onChoose: (item: RemoteTargetItem | null) => void,
+		private readonly onChoose: (item: RemoteTargetItem) => void,
 		placeholder?: string,
 	) {
 		super(app);

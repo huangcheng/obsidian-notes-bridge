@@ -33,16 +33,6 @@ export const IMA_API_BASE = "https://ima.qq.com";
 /** Where to send users to create credentials. */
 export const IMA_HELP_URL = "https://ima.qq.com/agent-interface";
 
-/**
- * POST /openapi/note/v1/import_doc request body.
- * `content_format` 1 == Markdown (the only value supported for writing).
- */
-export interface ImaImportDocRequest {
-	content_format: 1;
-	content: string;
-	folder_id?: string;
-}
-
 /** POST /openapi/note/v1/import_doc response. */
 export interface ImaImportDocResponse {
 	code?: number;

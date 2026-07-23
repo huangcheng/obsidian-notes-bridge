@@ -125,14 +125,14 @@ export const en = {
 			enabled: "Show {{provider}} in commands and the file-explorer submenu.",
 			testConnection: "Verify connectivity to the provider.",
 		},
-	buttons: {
-		test: "Test",
-		refresh: "Refresh",
-		detect: "Detect",
-		saveToCli: "Save to CLI",
-		choose: "Choose\u2026",
-		clear: "Clear",
-	},
+		buttons: {
+			test: "Test",
+			refresh: "Refresh",
+			detect: "Detect",
+			saveToCli: "Save to CLI",
+			choose: "Choose\u2026",
+			clear: "Clear",
+		},
 		providerIntro:
 			"Configure note-source integrations for {{bear}}, {{wps}}, {{youdao}}, {{flomo}}, {{yinxiang}}, {{weknora}}, and {{ima}}. Each provider exposes import / export operations to the plugin's commands and the file-explorer right-click menu.",
 		options: {
@@ -193,7 +193,7 @@ export const en = {
 		weknoraIntro:
 			"Export notes to a self-hosted or cloud {{provider}} instance via its REST API. Create an API key in WeKnora \u2192 Settings \u2192 Integrations \u2192 API with full access or the ingest capability.",
 		getWeknoraToken: "Open WeKnora on GitHub",
-		weknoraNoKb: "No knowledge base selected. Enter API URL + API key, then click Refresh.",
+		weknoraNoKb: "No knowledge base selected. Enter API URL + API key, then click Choose.",
 		imaIntro:
 			"Export notes to {{provider}} (Tencent IMA) via its official OpenAPI. Notes are sent to Tencent IMA servers; your Client ID and API Key are stored locally in this vault and only transmitted to https://ima.qq.com. Enable this provider to opt in.",
 		getImaToken: "Get IMA credentials",

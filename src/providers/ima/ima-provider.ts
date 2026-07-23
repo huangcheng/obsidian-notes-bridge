@@ -169,7 +169,7 @@ export class ImaProvider implements Provider {
 						"ima-openapi-apikey": apiKey,
 					},
 					// IMA requires limit inside (0, 20]; use the max of 20 per page.
-				body: JSON.stringify({ cursor, limit: 20 }),
+					body: JSON.stringify({ cursor, limit: 20 }),
 					throw: false,
 				});
 			} catch {
@@ -230,7 +230,11 @@ function describeImaHttpError(status: number, body: unknown): string {
 	let detail = "";
 	if (typeof body === "object" && body !== null) {
 		const env = body as { msg?: unknown; message?: unknown };
-		detail = env.msg != null ? String(env.msg) : env.message != null ? String(env.message) : "";
+		if (env.msg !== undefined && env.msg !== null) {
+			detail = String(env.msg);
+		} else if (env.message !== undefined && env.message !== null) {
+			detail = String(env.message);
+		}
 	}
 	const suffix = detail ? ` — ${detail}` : "";
 	return t("providers.imaHttpError", { status: String(status), detail: suffix });

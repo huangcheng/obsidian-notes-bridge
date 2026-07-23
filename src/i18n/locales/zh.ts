@@ -118,14 +118,14 @@ export const zh = {
 			enabled: "在命令和文件资源管理器子菜单中显示 {{provider}}。",
 			testConnection: "验证与提供商的连接。",
 		},
-	buttons: {
-		test: "测试",
-		refresh: "刷新",
-		detect: "检测",
-		saveToCli: "保存到 CLI",
-		choose: "选择\u2026",
-		clear: "清除",
-	},
+		buttons: {
+			test: "测试",
+			refresh: "刷新",
+			detect: "检测",
+			saveToCli: "保存到 CLI",
+			choose: "选择\u2026",
+			clear: "清除",
+		},
 		providerIntro:
 			"配置 {{bear}}、{{wps}}、{{youdao}}、{{flomo}}、{{yinxiang}}、{{weknora}}、{{ima}} 的笔记源集成。每个提供商都会向插件命令和文件资源管理器右键菜单公开导入/导出操作。",
 
@@ -188,7 +188,7 @@ export const zh = {
 		weknoraIntro:
 			"通过 REST API 将笔记导出到自托管或云端 {{provider}} 实例。请在 WeKnora \u2192 设置 \u2192 集成 \u2192 API 创建具备完全访问或 ingest 权限的 API 密钥。",
 		getWeknoraToken: "在 GitHub 上打开 WeKnora",
-		weknoraNoKb: "尚未选择知识库。请先填写 API 地址与 API 密钥，再点击\u300c刷新\u300d。",
+		weknoraNoKb: "尚未选择知识库。请先填写 API 地址与 API 密钥，再点击「选择」。",
 		imaIntro:
 			"通过官方 OpenAPI 将笔记导出到 {{provider}}（腾讯 IMA）。笔记将发送到腾讯 IMA 服务器；你的客户端 ID 与 API 密钥仅本地存储于此 Vault，且仅会传输到 https://ima.qq.com。启用此提供商即视为同意。",
 		getImaToken: "获取 IMA 凭据",

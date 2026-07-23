@@ -961,7 +961,6 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			this.app,
 			items,
 			async (picked) => {
-				if (!picked) return;
 				await opts.onChoose(picked);
 				valueEl.setText(picked.name);
 				valueEl.setAttr("title", picked.name);

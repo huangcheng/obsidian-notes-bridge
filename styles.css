@@ -297,6 +297,7 @@
 }
 .aie-provider-status--incomplete {
 	color: var(--text-warning, var(--text-muted));
+	background: rgba(180, 130, 0, 0.14);
 	background: color-mix(in srgb, var(--text-warning, var(--text-muted)) 14%, transparent);
 }
 .aie-provider-status--incomplete::before {
