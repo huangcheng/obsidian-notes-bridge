@@ -60,6 +60,28 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 		super(app, plugin);
 	}
 
+	/**
+	 * Obsidian 1.13+ declarative-settings hook.
+	 *
+	 * We intentionally return an EMPTY array. On Obsidian 1.13+, returning a
+	 * non-empty array makes Obsidian bypass our imperative `display()` and
+	 * render a generic declarative UI — which would discard this plugin's
+	 * custom card-based settings (collapsible provider cards, header enable
+	 * toggles, FuzzySuggestModal target pickers, test/save buttons). An empty
+	 * array keeps `display()` running on EVERY version, including 1.13+, while
+	 * still implementing the method (satisfying the eslint
+	 * `prefer-setting-definitions` presence check). Per-setting global-search
+	 * indexing is intentionally not provided because the settings are a custom
+	 * card UI that does not map to flat declarative controls.
+	 *
+	 * NOTE: the bundled `obsidian` type definitions predate this 1.13 API, so
+	 * the method has no base declaration; Obsidian 1.13+ invokes it via duck
+	 * typing at runtime, and an empty array is a valid return.
+	 */
+	getSettingDefinitions(): unknown[] {
+		return [];
+	}
+
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();

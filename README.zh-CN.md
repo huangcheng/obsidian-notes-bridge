@@ -130,6 +130,15 @@ npm run build
 | WeKnora | 导出（仅推送） | 你配置的 base URL，带 `X-API-Key` 头 |
 | 腾讯 IMA | 导出（仅推送） | `https://ima.qq.com`，带 `ima-openapi-clientid` + `ima-openapi-apikey` 头 |
 
+### 能力与权限
+
+为透明起见，针对部分审查工具提出的告警说明如下：
+
+- **Shell 执行**：插件会为需要 CLI 的提供商派生子进程——有道（`youdaonote`）、Bear（`bearcli`），以及配置为 CLI 传输时的 WPS。它只会运行你所配置的二进制文件。
+- **访问 vault 之外的文件系统**：导出的笔记会写入配置的导出目录，并在向 CLI 传递内容时使用临时文件。提供商凭据与设置保存在 vault 内插件自身的数据文件中。
+- **剪贴板**：*复制为纯 Markdown* 会将转换后的笔记写入系统剪贴板。
+- **动态代码执行告警**：打包的 MCP SDK（`@modelcontextprotocol/sdk`，用于 Flomo 与 WPS 的 MCP 传输）依赖 [Ajv](https://ajv.js.org/)，它会通过 `new Function(...)` 将 JSON Schema 编译为校验函数。这编译的是**受信任、由 schema 定义**的代码，而非远程或用户提供的脚本，且属于 JSON Schema 校验的固有行为；除非放弃 MCP 支持，否则无法移除。本插件从不获取或执行远程代码。
+
 ## 开发
 
 ```bash

@@ -130,6 +130,15 @@ Copy the output files (`main.js`, `manifest.json`, `styles.css`) into your vault
 | WeKnora | Export (push-only) | Your configured base URL with an `X-API-Key` header |
 | IMA (Tencent) | Export (push-only) | `https://ima.qq.com` with `ima-openapi-clientid` + `ima-openapi-apikey` headers |
 
+### Capabilities and permissions
+
+To be transparent about the warnings some reviewers surface:
+
+- **Shell execution.** The plugin spawns CLI subprocesses for the providers that need them — Youdao (`youdaonote`), Bear (`bearcli`), and WPS when configured for the CLI transport. It only ever runs the binaries you configure.
+- **Filesystem access outside the vault.** Exported notes are written to the configured export folder, and short-lived temp files are used while handing content to CLIs. Provider credentials and settings live in the plugin's own data file inside the vault.
+- **Clipboard.** *Copy as pure Markdown* writes the transformed note to the system clipboard.
+- **Dynamic code execution notice.** The bundled MCP SDK (`@modelcontextprotocol/sdk`, used for the Flomo and WPS MCP transports) depends on [Ajv](https://ajv.js.org/), which compiles JSON Schemas into validator functions using `new Function(...)`. This compiles **trusted, schema-defined** code — not remote or user-supplied scripts — and is inherent to JSON-Schema validation; it cannot be removed without dropping MCP support. The plugin never fetches or executes remote code.
+
 ## Development
 
 ```bash
