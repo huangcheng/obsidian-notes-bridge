@@ -230,10 +230,10 @@ function describeImaHttpError(status: number, body: unknown): string {
 	let detail = "";
 	if (typeof body === "object" && body !== null) {
 		const env = body as { msg?: unknown; message?: unknown };
-		if (env.msg !== undefined && env.msg !== null) {
-			detail = String(env.msg);
-		} else if (env.message !== undefined && env.message !== null) {
-			detail = String(env.message);
+		if (typeof env.msg === "string") {
+			detail = env.msg;
+		} else if (typeof env.message === "string") {
+			detail = env.message;
 		}
 	}
 	const suffix = detail ? ` — ${detail}` : "";

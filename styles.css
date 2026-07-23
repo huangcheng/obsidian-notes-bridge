@@ -298,10 +298,17 @@
 .aie-provider-status--incomplete {
 	color: var(--text-warning, var(--text-muted));
 	background: rgba(180, 130, 0, 0.14);
-	background: color-mix(in srgb, var(--text-warning, var(--text-muted)) 14%, transparent);
+}
+@supports (background: color-mix(in srgb, red 50%, blue)) {
+	.aie-provider-status--incomplete {
+		background: color-mix(in srgb, var(--text-warning, var(--text-muted)) 14%, transparent);
+	}
 }
 .aie-provider-status--incomplete::before {
 	content: "⚠";
 	font-size: 0.95em;
 	line-height: 1;
 }
+
+/* Hide a control (e.g. the target-row Clear button) without inline styles */
+.aie-is-hidden { display: none !important; }

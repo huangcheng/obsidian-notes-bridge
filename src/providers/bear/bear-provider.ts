@@ -134,7 +134,7 @@ export class BearProvider implements Provider {
 			throw new Error(`Bear fetch already in progress for ${remoteId}`);
 		}
 		return new Promise<NormalizedNote>((resolve, reject) => {
-			const timer = activeWindow.setTimeout(() => {
+			const timer = window.setTimeout(() => {
 				this.pending.delete(remoteId);
 				reject(new Error(`Bear fetch timed out for ${remoteId}`));
 			}, FETCH_TIMEOUT_MS);
@@ -143,7 +143,7 @@ export class BearProvider implements Provider {
 			if (opts?.signal) {
 				const onAbort = () => {
 					this.pending.delete(remoteId);
-					activeWindow.clearTimeout(timer);
+					window.clearTimeout(timer);
 					reject(new Error("Cancelled"));
 				};
 				opts.signal.addEventListener("abort", onAbort, { once: true });
@@ -174,7 +174,7 @@ export class BearProvider implements Provider {
 		if (!entry || key === undefined) return;
 
 		this.pending.delete(key);
-		activeWindow.clearTimeout(entry.timer);
+		window.clearTimeout(entry.timer);
 		entry.signalCleanup?.();
 
 		if (!parsed.success) {
@@ -235,7 +235,7 @@ export class BearProvider implements Provider {
 
 	dispose(): void {
 		for (const entry of this.pending.values()) {
-			activeWindow.clearTimeout(entry.timer);
+			window.clearTimeout(entry.timer);
 			entry.signalCleanup?.();
 			entry.reject(new Error("BearProvider disposed"));
 		}

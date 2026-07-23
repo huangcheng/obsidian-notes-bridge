@@ -921,14 +921,14 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				await opts.onClear();
 				valueEl.setText(opts.noneLabel);
 				valueEl.setAttr("title", opts.noneLabel);
-				btn.buttonEl.style.display = "none";
+				btn.buttonEl.addClass("aie-is-hidden");
 			});
 		});
 		setting.addButton((btn) =>
 			btn.setButtonText(t("settings.buttons.choose")).onClick(() => void this.pickRemoteTarget(opts, valueEl, clearButton)),
 		);
 		if (!opts.currentId?.trim() && !opts.currentName?.trim()) {
-			clearButton.buttonEl.style.display = "none";
+			clearButton.buttonEl.addClass("aie-is-hidden");
 		}
 	}
 
@@ -960,11 +960,13 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 		new RemoteTargetPickerModal(
 			this.app,
 			items,
-			async (picked) => {
-				await opts.onChoose(picked);
-				valueEl.setText(picked.name);
-				valueEl.setAttr("title", picked.name);
-				clearButton.buttonEl.style.display = "";
+			(picked) => {
+				void (async () => {
+					await opts.onChoose(picked);
+					valueEl.setText(picked.name);
+					valueEl.setAttr("title", picked.name);
+					clearButton.buttonEl.removeClass("aie-is-hidden");
+				})();
 			},
 			opts.pickPlaceholder,
 		).open();
