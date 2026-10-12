@@ -2,7 +2,7 @@
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
-一款 [Obsidian](https://obsidian.md) 插件，把笔记导出为可移植的纯 Markdown，并把你的库与 Bear、WPS 云笔记、有道云笔记、Flomo、印象笔记、WeKnora、腾讯 IMA 打通。每个集成都是一个独立启用、独立配置的一等公民客户端。
+一款 [Obsidian](https://obsidian.md) 插件，把笔记导出为可移植的纯 Markdown，并把你的库与 Bear、WPS 云笔记、有道云笔记、Flomo、印象笔记、WeKnora、腾讯 IMA、Octop 打通。每个集成都是一个独立启用、独立配置的一等公民客户端。
 
 > 仅桌面端（`isDesktopOnly: true`）—— 多个 Provider 会调用 CLI 子进程。
 
@@ -44,6 +44,7 @@
 - **印象笔记（Yinxiang）** —— 通过印象笔记 REST API 导出与导入。
 - **WeKnora** —— 通过 REST API 导出到自托管或云端的 WeKnora 实例（仅推送）。
 - **腾讯 IMA** —— 通过腾讯 IMA 官方 OpenAPI 导出（仅推送）。
+- **Octop** —— 通过 REST API 导出到自托管 Octop 知识库（仅推送）。用户名、密码与缓存的 JWT 保存在插件 `data.json` 中，可能随仓库同步。
 
 ### 统一的目标选择器
 
@@ -71,6 +72,7 @@ IMA、印象笔记、WeKnora、有道云笔记共用同一个 `FuzzySuggestModal
 | Send active note to Yinxiang | 把当前笔记派发到已配置的印象笔记 Provider |
 | Send active note to WeKnora | 把当前笔记派发到已配置的 WeKnora Provider |
 | Send active note to IMA | 把当前笔记派发到已配置的 IMA Provider |
+| Send active note to Octop | 把当前笔记派发到已配置的 Octop Provider |
 
 ## 设置
 
@@ -129,6 +131,7 @@ npm run build
 | 印象笔记 | 导出 + 导入 | `https://app.yinxiang.com`，带 `auth: <你的 Token>` |
 | WeKnora | 导出（仅推送） | 你配置的 base URL，带 `X-API-Key` 头 |
 | 腾讯 IMA | 导出（仅推送） | `https://ima.qq.com`，带 `ima-openapi-clientid` + `ima-openapi-apikey` 头 |
+| Octop | 导出（仅推送） | 你配置的 base URL（含 `/api`），通过用户名/密码登录获取短期 JWT |
 
 ### 能力与权限
 

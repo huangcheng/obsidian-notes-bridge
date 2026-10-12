@@ -13,6 +13,7 @@ export const zh = {
 		sendToYinxiang: "发送活动笔记到印象笔记…",
 		sendToWeknora: "发送活动笔记到 WeKnora\u2026",
 		sendToIma: "发送活动笔记到 IMA\u2026",
+		sendToOctop: "发送活动笔记到 Octop\u2026",
 	},
 	notices: {
 		noActiveNote: "没有活动笔记可复制",
@@ -78,6 +79,8 @@ export const zh = {
 			apiToken: "API 令牌",
 			apiUrl: "API 地址",
 			clientId: "客户端 ID",
+			username: "用户名",
+			password: "密码",
 			knowledgeBase: "知识库",
 			writeToolName: "写入工具名称",
 			defaultFolderId: "默认文件夹 ID",
@@ -111,6 +114,10 @@ export const zh = {
 			imaApiKey: "仅在本地存储。每次请求以 ima-openapi-apikey 头发送到 https://ima.qq.com。",
 			imaFolder: "选择新笔记在 IMA 中的保存位置。留空则使用默认位置。",
 			yinxiangNotebook: "导出默认笔记本。",
+			octopApiUrl: "API 地址（含 /api），例如 http://localhost:5174/api。不要省略 /api。",
+			octopUsername: "Octop 账户用户名。仅保存在本地插件数据中。",
+			octopPassword: "Octop 账户密码。仅本地存储；Obsidian Sync 可能将插件数据同步到其他设备。",
+			octopKnowledgeBase: "导出默认知识库。点击\u300c刷新\u300d从服务器加载列表。",
 			writeToolName:
 				"可选覆盖。留空则自动选择（write_note → write_memo → 第一个 write_*）。",
 			defaultFolderId: "选择新笔记在有道云笔记中的保存位置。留空则使用默认位置。",
@@ -127,7 +134,7 @@ export const zh = {
 			clear: "清除",
 		},
 		providerIntro:
-			"配置 {{bear}}、{{wps}}、{{youdao}}、{{flomo}}、{{yinxiang}}、{{weknora}}、{{ima}} 的笔记源集成。每个提供商都会向插件命令和文件资源管理器右键菜单公开导入/导出操作。",
+			"配置 {{bear}}、{{wps}}、{{youdao}}、{{flomo}}、{{yinxiang}}、{{weknora}}、{{ima}}、{{octop}} 的笔记源集成。每个提供商都会向插件命令和文件资源管理器右键菜单公开导入/导出操作。",
 
 		options: {
 			drop: "丢弃",
@@ -200,7 +207,34 @@ export const zh = {
 		loadingTargets: "正在加载\u2026",
 		noTargets: "未找到项目。",
 		pickTarget: "选择\u2026",
-
+		octopIncompleteConfig: "请先在设置中填写 API 地址、用户名、密码和知识库。",
+		octopAuthFailed: "Octop 拒绝了用户名或密码。",
+		octopUnreachable: "无法连接到 Octop 服务器。",
+		octopForbidden: "Octop 拒绝了此账户的访问。",
+		octopNotFound: "未找到知识库。请点击\u300c刷新\u300d并另选一个。",
+		octopWrongBaseUrl: "此 URL 下未找到 Octop API。请确认地址包含 /api。",
+		octopPrerequisitesFailed: "Octop 知识库前置条件未就绪（向量模型或依赖）。",
+		octopCapabilityUnavailable: "当前服务器上的 Octop 知识库不可用。",
+		octopConflict: "Octop 在创建文档时报告冲突。",
+		octopTooLarge: "笔记超过 Octop 服务器大小限制。",
+		octopValidationFailed: "Octop 拒绝了文档内容。",
+		octopRateLimited: "Octop 对请求进行了限流。",
+		octopTimeout: "Octop 请求超时。",
+		octopTimeoutMaybeSent: "Octop 请求超时；笔记可能仍已被接收。",
+		octopServerError: "Octop 服务器错误。",
+		octopCreateFailed: "Octop 未返回文档 ID。",
+		octopReadUnsupported: "Octop 不支持回读笔记。",
+		octopIntro:
+			"将笔记导出到自托管 {{provider}} 知识库。用户名与密码保存在插件数据中（Obsidian Sync 可能同步到其他设备），用于获取短期 JWT。",
+		octopNoKb: "尚未选择知识库。请先填写 API 地址与凭据，再点击\u300c刷新\u300d。",
+		octopCleartextWarning: "此 API 地址对非本机主机使用明文 HTTP。",
+		octopSyncWarning: "凭据与 JWT 保存在插件数据中，可能随仓库同步。",
+		octopMobileLocalhostHint: "在手机上，localhost 指向设备本身 — 请使用可访问的主机地址。",
+		octopSentForProcessing:
+			"已向 Octop 知识库「{{kb}}」发送 {{count}} 条笔记。请在 Octop 中打开该知识库，必要时刷新列表。",
+		octopTestSuccess: "已连接 — {{count}} 个知识库",
+		octopRefreshFailed: "无法刷新知识库列表。",
+		octopBatchAuthFailed: "本批次剩余笔记的 Octop 认证失败。",
 	},
 	brands: {
 		bear: "Bear",
@@ -210,7 +244,7 @@ export const zh = {
 		yinxiang: "印象笔记",
 		weknora: "WeKnora",
 		ima: "IMA",
+		octop: "Octop",
 		plugin: "跨应用笔记桥",
-
 	},
 } as const;

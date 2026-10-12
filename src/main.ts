@@ -15,12 +15,16 @@ import { YoudaoProviderConfig } from "./providers/youdao/types";
 import { YinxiangProviderConfig } from "./providers/yinxiang/types";
 import { WeknoraProviderConfig } from "./providers/weknora/types";
 import { ImaProviderConfig } from "./providers/ima/types";
+import { OctopAuthHost, OctopAuthSession } from "./providers/octop/auth";
+import { OctopProvider } from "./providers/octop/octop-provider";
+import { OctopProviderConfig } from "./providers/octop/types";
 import { selectionFromActiveEditor, selectionFromFileMenu, selectionFromFiles } from "./selection/builders";
 import { NoteSelection } from "./selection/note-selection";
 import { applyDefaultProviderMigration, DEFAULT_SETTINGS, PluginSettings } from "./settings";
 import { AdvancedImportExportSettingTab } from "./settings/settings-tab";
+import { PluginSaveQueue } from "./storage/save-queue";
 import { MarkdownTransformer } from "./transforms/transformer";
-import { FLOMO_NAME, WPS_NAME, WEKNORA_NAME, YOUDAO_NAME, YINXIANG_NAME, IMA_NAME } from "./ui/brand-names";
+import { FLOMO_NAME, OCTOP_NAME, WPS_NAME, WEKNORA_NAME, YOUDAO_NAME, YINXIANG_NAME, IMA_NAME } from "./ui/brand-names";
 import { ExportConfirmModal } from "./ui/export-confirm-modal";
 import { BearImportModal } from "./ui/bear-import-modal";
 import { tryRegisterNotebookNavigatorMenus } from "./integrations/notebook-navigator";
@@ -66,13 +70,35 @@ export default class AdvancedImportExportPlugin extends Plugin {
 	settings!: PluginSettings;
 	registry!: ProviderRegistry;
 	orchestrator!: Orchestrator;
+	saveQueue!: PluginSaveQueue;
+	octopAuth!: OctopAuthSession;
 	private bearImportModal: BearImportModal | null = null;
 
 	async onload(): Promise<void> {
 		initializeI18n(moment.locale());
 		this.registry = new ProviderRegistry();
-		registerAllFactories(this.registry);
 		await this.loadSettings();
+		this.saveQueue = new PluginSaveQueue(async () => {
+			await this.saveData(this.settings);
+		});
+		const authHost: OctopAuthHost = {
+			getAuthEntry: (configId) => this.settings.octopAuth[configId],
+			updateAuthEntry: async (configId, patch) => {
+				await this.saveQueue.enqueue(() => {
+					if (patch === null) {
+						delete this.settings.octopAuth[configId];
+					} else {
+						this.settings.octopAuth[configId] = { ...patch };
+					}
+				});
+			},
+			getConfig: (configId) => {
+				const cfg = this.settings.providers.find((p) => p.id === configId);
+				return cfg?.kind === "octop" ? (cfg as OctopProviderConfig) : undefined;
+			},
+		};
+		this.octopAuth = new OctopAuthSession(authHost);
+		registerAllFactories(this.registry, this.octopAuth);
 		this.registry.loadConfigs(this.settings.providers);
 		this.orchestrator = new Orchestrator({
 			app: this.app,
@@ -212,10 +238,24 @@ export default class AdvancedImportExportPlugin extends Plugin {
 			},
 		});
 
+
+		this.addCommand({
+			id: "export-active-to-octop",
+			name: t("commands.sendToOctop"),
+			checkCallback: (checking) => {
+				if (this.listOctopConfigs().length === 0) return false;
+				const sel = selectionFromActiveEditor(this.app);
+				if (!sel || sel.notes.length === 0) return false;
+				if (!checking) void this.pickOctopAndExport(sel.notes);
+				return true;
+			},
+		});
+
 		this.registerObsidianProtocolHandler("bear-callback", (data) => this.handleBearUri(data));
 	}
 
 	onunload(): void {
+		void this.saveQueue?.drain();
 		this.registry.disposeAll();
 	}
 
@@ -226,18 +266,33 @@ export default class AdvancedImportExportPlugin extends Plugin {
 			...(raw ?? {}),
 			transform: { ...DEFAULT_SETTINGS.transform, ...(raw?.transform ?? {}) },
 			providers: raw?.providers ?? [],
+			octopAuth: raw?.octopAuth && typeof raw.octopAuth === "object" ? { ...raw.octopAuth } : {},
 		};
 		applyDefaultProviderMigration(this.settings);
 	}
 
 	async saveSettings(): Promise<void> {
-		await this.saveData(this.settings);
+		await this.saveQueue.enqueue();
 		// Some settings affect long-lived components.
 		this.orchestrator = new Orchestrator({
 			app: this.app,
 			concurrency: this.settings.concurrency,
 		});
 		this.registry.loadConfigs(this.settings.providers);
+		// OctopProvider captures its config by reference at create time; drop
+		// cached instances so the next get() picks up the latest card fields.
+		for (const cfg of this.settings.providers) {
+			if (cfg.kind === "octop") this.registry.upsertConfig(cfg);
+		}
+	}
+
+	/** Clear Octop auth when credentials change (settings card). */
+	async clearOctopAuth(configId: string): Promise<void> {
+		await this.saveQueue.enqueue(() => {
+			delete this.settings.octopAuth[configId];
+		});
+		const cfg = this.settings.providers.find((p) => p.id === configId);
+		if (cfg) this.registry.upsertConfig(cfg);
 	}
 
 	private buildTransformer(): MarkdownTransformer {
@@ -431,9 +486,8 @@ export default class AdvancedImportExportPlugin extends Plugin {
 			if (!provider) continue;
 
 			const avail = provider.available?.() ?? { ok: true };
-			// Skip providers that aren't available in the current environment
-			if (!avail.ok) continue;
-
+			// Keep incomplete Octop (and peers) visible so a click can show why
+			// export is blocked, instead of silently omitting the menu item.
 			const icon = provider.icon ?? providerIcon(config.kind);
 
 			entries.push({
@@ -462,6 +516,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 			if (config.kind === "bear") {
 				this.addBearFlatItems(menu, files);
 			} else {
+				const { avail } = entry;
 				menu.addItem((item) =>
 					item
 						.setTitle(
@@ -472,8 +527,15 @@ export default class AdvancedImportExportPlugin extends Plugin {
 						.setIcon(icon)
 						.setSection(config.id)
 						.onClick(async () => {
+							if (!avail.ok) {
+								new Notice(
+									avail.reason ??
+										t("notices.providerUnavailable", { provider: config.displayName }),
+								);
+								return;
+							}
 							try {
-								await this.exportToProvider(config as WpsProviderConfig | YoudaoProviderConfig | FlomoProviderConfig | YinxiangProviderConfig | WeknoraProviderConfig | ImaProviderConfig, files);
+								await this.exportToProvider(config as WpsProviderConfig | YoudaoProviderConfig | FlomoProviderConfig | YinxiangProviderConfig | WeknoraProviderConfig | ImaProviderConfig | OctopProviderConfig, files);
 							} catch (err) {
 								new Notice(t("notices.exportFailed", { error: errorMessage(err) }));
 							}
@@ -599,8 +661,29 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		await this.exportToProvider(target, files);
 	}
 
+
+	private listOctopConfigs(): OctopProviderConfig[] {
+		return this.settings.providers.filter(
+			(p): p is OctopProviderConfig => p.kind === "octop" && p.enabled !== false,
+		);
+	}
+
+	private async pickOctopAndExport(files: TFile[]): Promise<void> {
+		const configs = this.listOctopConfigs();
+		if (configs.length === 0) {
+			new Notice(t("notices.noProviderConfigured", { provider: OCTOP_NAME }));
+			return;
+		}
+		const target =
+			configs.length === 1
+				? configs[0]!
+				: await this.pickProviderConfig(configs, t("notices.selectProvider", { provider: OCTOP_NAME }));
+		if (!target) return;
+		await this.exportToProvider(target, files);
+	}
+
 	private async exportToProvider(
-		config: WpsProviderConfig | YoudaoProviderConfig | FlomoProviderConfig | YinxiangProviderConfig | WeknoraProviderConfig | ImaProviderConfig,
+		config: WpsProviderConfig | YoudaoProviderConfig | FlomoProviderConfig | YinxiangProviderConfig | WeknoraProviderConfig | ImaProviderConfig | OctopProviderConfig,
 		files: TFile[],
 	): Promise<void> {
 		const provider = this.registry.get(config.id);
@@ -612,6 +695,9 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		if (!avail.ok) {
 			new Notice(avail.reason ?? t("notices.providerUnavailable", { provider: config.displayName }));
 			return;
+		}
+		if (config.kind === "octop" && provider instanceof OctopProvider) {
+			provider.beginExportBatch();
 		}
 		const transformer = this.buildTransformer();
 		let succeeded = 0;
@@ -638,13 +724,33 @@ export default class AdvancedImportExportPlugin extends Plugin {
 			}
 		}
 		if (failures.length === 0) {
-			new Notice(
-				t("notices.exportedTo", { count: succeeded, s: succeeded === 1 ? "" : "s", provider: config.displayName }),
-			);
+			if (config.kind === "octop") {
+				const kb =
+					config.knowledgeBaseName?.trim() ||
+					config.knowledgeBaseId?.trim() ||
+					config.displayName;
+				new Notice(t("providers.octopSentForProcessing", { count: succeeded, kb }), 8000);
+			} else {
+				new Notice(
+					t("notices.exportedTo", {
+						count: succeeded,
+						s: succeeded === 1 ? "" : "s",
+						provider: config.displayName,
+					}),
+				);
+			}
 		} else {
 			const firstReason = failures[0]?.error ?? "unknown";
+			for (const f of failures) {
+				console.warn(`[${config.kind}] export failed for ${f.file.path}: ${f.error}`);
+			}
 			new Notice(
-				t("notices.exportPartialFail", { provider: config.displayName, succeeded, failed: failures.length, reason: firstReason }),
+				t("notices.exportPartialFail", {
+					provider: config.displayName,
+					succeeded,
+					failed: failures.length,
+					reason: firstReason,
+				}),
 				12000,
 			);
 		}
@@ -705,6 +811,7 @@ function providerIcon(kind: string): string {
 		case "yinxiang": return "book-marked";
 		case "weknora": return "database";
 		case "ima": return "book-open";
+		case "octop": return "database";
 		default: return "export";
 	}
 }

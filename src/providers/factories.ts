@@ -1,6 +1,8 @@
 import { bearFactory } from "./bear/bear-provider";
 import { flomoFactory } from "./flomo/flomo-provider";
 import { imaFactory } from "./ima/ima-provider";
+import { OctopAuthSession } from "./octop/auth";
+import { createOctopFactory } from "./octop/octop-provider";
 import { ProviderRegistry } from "./registry";
 import { weknoraFactory } from "./weknora/weknora-provider";
 import { wpsFactory } from "./wps/wps-provider";
@@ -9,9 +11,9 @@ import { yinxiangFactory } from "./yinxiang/yinxiang-provider";
 
 /**
  * Register every built-in provider factory with the supplied registry.
- * Called once during plugin onload.
+ * Called once during plugin onload. Octop needs an auth session host.
  */
-export function registerAllFactories(registry: ProviderRegistry): void {
+export function registerAllFactories(registry: ProviderRegistry, octopAuth?: OctopAuthSession): void {
 	registry.registerFactory(bearFactory);
 	registry.registerFactory(wpsFactory);
 	registry.registerFactory(youdaoFactory);
@@ -19,4 +21,7 @@ export function registerAllFactories(registry: ProviderRegistry): void {
 	registry.registerFactory(yinxiangFactory);
 	registry.registerFactory(weknoraFactory);
 	registry.registerFactory(imaFactory);
+	if (octopAuth) {
+		registry.registerFactory(createOctopFactory(octopAuth));
+	}
 }

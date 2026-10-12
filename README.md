@@ -2,7 +2,7 @@
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
-An [Obsidian](https://obsidian.md) plugin that exports notes as portable Markdown and bridges your vault with Bear, WPS Cloud Note, Youdao Note, Flomo, Yinxiang (印象笔记), WeKnora, and IMA (Tencent). Each integration is an independently enabled, independently configured first-class client.
+An [Obsidian](https://obsidian.md) plugin that exports notes as portable Markdown and bridges your vault with Bear, WPS Cloud Note, Youdao Note, Flomo, Yinxiang (印象笔记), WeKnora, IMA (Tencent), and Octop. Each integration is an independently enabled, independently configured first-class client.
 
 > Desktop only (`isDesktopOnly: true`) — several providers drive CLI subprocesses.
 
@@ -44,6 +44,7 @@ Each provider below can be enabled and configured independently in **Settings �
 - **Yinxiang (印象笔记)** — export and import via the Yinxiang REST API.
 - **WeKnora** — export (push-only) to a self-hosted or cloud WeKnora instance via its REST API.
 - **IMA (Tencent)** — export (push-only) to Tencent IMA via its official OpenAPI.
+- **Octop** — export (push-only) to a self-hosted Octop knowledge base via its REST API. Username, password, and cached JWTs are stored in plugin `data.json` and may sync with the vault.
 
 ### Unified target picker
 
@@ -71,6 +72,7 @@ Right-click any file in the file explorer (or select multiple files) to find the
 | Send active note to Yinxiang | Dispatch the active note to a configured Yinxiang provider |
 | Send active note to WeKnora | Dispatch the active note to a configured WeKnora provider |
 | Send active note to IMA | Dispatch the active note to a configured IMA provider |
+| Send active note to Octop | Dispatch the active note to a configured Octop knowledge base |
 
 ## Settings
 
@@ -129,6 +131,7 @@ Copy the output files (`main.js`, `manifest.json`, `styles.css`) into your vault
 | Yinxiang (印象笔记) | Export + import | `https://app.yinxiang.com` with `auth: <token>` |
 | WeKnora | Export (push-only) | Your configured base URL with an `X-API-Key` header |
 | IMA (Tencent) | Export (push-only) | `https://ima.qq.com` with `ima-openapi-clientid` + `ima-openapi-apikey` headers |
+| Octop | Export (push-only) | Your configured base URL (including `/api`) with short-lived JWTs from username/password login |
 
 ### Capabilities and permissions
 

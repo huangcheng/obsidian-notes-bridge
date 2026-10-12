@@ -7,6 +7,7 @@ import { DEFAULT_WPS_CONFIG, WpsProviderConfig } from "../providers/wps/types";
 import { DEFAULT_YOUDAO_CONFIG, YoudaoProviderConfig } from "../providers/youdao/types";
 import { DEFAULT_YINXIANG_CONFIG, YinxiangProviderConfig } from "../providers/yinxiang/types";
 import { DEFAULT_WEKNORA_CONFIG, WeknoraProviderConfig } from "../providers/weknora/types";
+import { DEFAULT_OCTOP_CONFIG, OctopAuthEntry, OctopProviderConfig } from "../providers/octop/types";
 import { DEFAULT_TRANSFORM_CONFIG, TransformConfig } from "../transforms/config";
 
 export type ProviderConfig =
@@ -17,6 +18,7 @@ export type ProviderConfig =
 	| YinxiangProviderConfig
 	| WeknoraProviderConfig
 	| ImaProviderConfig
+	| OctopProviderConfig
 	| ProviderConfigBase;
 
 export interface PluginSettings {
@@ -26,6 +28,8 @@ export interface PluginSettings {
 	concurrency: number;
 	developerLog: boolean;
 	providers: ProviderConfig[];
+	/** Octop JWTs / breaker state keyed by provider config id (not card-edited). */
+	octopAuth: Record<string, OctopAuthEntry>;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -35,6 +39,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	concurrency: 4,
 	developerLog: false,
 	providers: [],
+	octopAuth: {},
 };
 
 /**
@@ -99,5 +104,16 @@ export function applyDefaultProviderMigration(settings: PluginSettings): void {
 			...DEFAULT_IMA_CONFIG,
 		};
 		settings.providers.push(cfg);
+	}
+	if (!settings.providers.some((p) => p.kind === "octop")) {
+		const cfg: OctopProviderConfig = {
+			id: "octop",
+			displayName: "Octop",
+			...DEFAULT_OCTOP_CONFIG,
+		};
+		settings.providers.push(cfg);
+	}
+	if (!settings.octopAuth || typeof settings.octopAuth !== "object") {
+		settings.octopAuth = {};
 	}
 }

@@ -13,6 +13,7 @@ export const en = {
 		sendToYinxiang: "Send active note to Yinxiang…",
 		sendToWeknora: "Send active note to WeKnora\u2026",
 		sendToIma: "Send active note to IMA\u2026",
+		sendToOctop: "Send active note to Octop\u2026",
 	},
 	notices: {
 		noActiveNote: "No active note to copy",
@@ -80,6 +81,8 @@ export const en = {
 			apiToken: "API token",
 			apiUrl: "API URL",
 			clientId: "Client ID",
+			username: "Username",
+			password: "Password",
 			knowledgeBase: "Knowledge base",
 			writeToolName: "Write tool name",
 			defaultFolderId: "Default folder ID",
@@ -117,6 +120,11 @@ export const en = {
 			imaApiKey: "Stored locally. Sent as the ima-openapi-apikey header on every request to https://ima.qq.com.",
 			imaFolder: "Choose where new notes are saved in IMA. Leave empty for the default location.",
 			yinxiangNotebook: "Default notebook for exports.",
+			octopApiUrl: "API base including /api, e.g. http://localhost:5174/api. Do not omit /api.",
+			octopUsername: "Octop account username. Stored locally in plugin data.",
+			octopPassword:
+				"Octop account password. Stored locally; Obsidian Sync may copy plugin data to other devices.",
+			octopKnowledgeBase: "Default knowledge base for exports. Click Refresh to load the list from the server.",
 			writeToolName:
 				"Optional override. Leave empty to auto-pick (write_note → write_memo → first write_*).",
 			defaultFolderId:
@@ -134,7 +142,7 @@ export const en = {
 			clear: "Clear",
 		},
 		providerIntro:
-			"Configure note-source integrations for {{bear}}, {{wps}}, {{youdao}}, {{flomo}}, {{yinxiang}}, {{weknora}}, and {{ima}}. Each provider exposes import / export operations to the plugin's commands and the file-explorer right-click menu.",
+			"Configure note-source integrations for {{bear}}, {{wps}}, {{youdao}}, {{flomo}}, {{yinxiang}}, {{weknora}}, {{ima}}, and {{octop}}. Each provider exposes import / export operations to the plugin's commands and the file-explorer right-click menu.",
 		options: {
 			drop: "Drop",
 			replaceWithLink: "Replace with link",
@@ -205,6 +213,35 @@ export const en = {
 		loadingTargets: "Loading\u2026",
 		noTargets: "No items found.",
 		pickTarget: "Select\u2026",
+		octopIncompleteConfig: "Configure API URL, username, password, and a knowledge base in settings first.",
+		octopAuthFailed: "Octop rejected the username or password.",
+		octopUnreachable: "Could not reach the Octop server.",
+		octopForbidden: "Octop denied access for this account.",
+		octopNotFound: "Knowledge base not found. Click Refresh and pick another.",
+		octopWrongBaseUrl: "Octop API not found at this URL. Check that the base includes /api.",
+		octopPrerequisitesFailed:
+			"Octop knowledge base prerequisites are not ready (embedding model or dependencies).",
+		octopCapabilityUnavailable: "Octop knowledge bases are not usable on this server right now.",
+		octopConflict: "Octop reported a conflict creating the document.",
+		octopTooLarge: "Note is too large for the Octop server limit.",
+		octopValidationFailed: "Octop rejected the document payload.",
+		octopRateLimited: "Octop rate-limited the request.",
+		octopTimeout: "Octop request timed out.",
+		octopTimeoutMaybeSent: "Octop request timed out; the note may still have been accepted.",
+		octopServerError: "Octop server error.",
+		octopCreateFailed: "Octop did not return a document id.",
+		octopReadUnsupported: "Octop does not support reading notes back.",
+		octopIntro:
+			"Export notes to a self-hosted {{provider}} knowledge base. Username and password are stored in plugin data (Obsidian Sync may replicate them) and used to obtain short-lived JWTs.",
+		octopNoKb: "No knowledge base selected. Enter API URL + credentials, then click Refresh.",
+		octopCleartextWarning: "This API URL uses cleartext HTTP to a non-local host.",
+		octopSyncWarning: "Credentials and JWTs are stored in plugin data and may sync with the vault.",
+		octopMobileLocalhostHint: "On a phone, localhost is the device itself — use a reachable host.",
+		octopSentForProcessing:
+			"Sent {{count}} note(s) to Octop knowledge base “{{kb}}”. Open that base in Octop and refresh if needed.",
+		octopTestSuccess: "Connected — {{count}} knowledge base(s)",
+		octopRefreshFailed: "Could not refresh knowledge bases.",
+		octopBatchAuthFailed: "Octop authentication failed for remaining notes in this batch.",
 	},
 	brands: {
 		bear: "Bear",
@@ -214,6 +251,7 @@ export const en = {
 		yinxiang: "Yinxiang",
 		weknora: "WeKnora",
 		ima: "IMA",
+		octop: "Octop",
 		plugin: "Notes Bridge",
 	},
 } as const;

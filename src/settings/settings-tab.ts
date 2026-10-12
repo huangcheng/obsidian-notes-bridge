@@ -1,4 +1,4 @@
-import { App, ButtonComponent, Notice, PluginSettingTab, Setting, ToggleComponent } from "obsidian";
+import { App, ButtonComponent, Notice, PluginSettingTab, Setting, ToggleComponent, debounce } from "obsidian";
 import type AdvancedImportExportPlugin from "../main";
 import { t } from "../i18n";
 import { BearProvider, BearProviderConfig } from "../providers/bear/bear-provider";
@@ -11,7 +11,7 @@ import { WpsProviderConfig } from "../providers/wps/types";
 import { YoudaoProvider } from "../providers/youdao/youdao-provider";
 import { YinxiangProvider } from "../providers/yinxiang/yinxiang-provider";
 import { YinxiangProviderConfig, YINXIANG_OAUTH_URL } from "../providers/yinxiang/types";
-import { BEAR_NAME, FLOMO_NAME, WPS_NAME, WEKNORA_NAME, YOUDAO_NAME, YINXIANG_NAME, IMA_NAME } from "../ui/brand-names";
+import { BEAR_NAME, FLOMO_NAME, OCTOP_NAME, WPS_NAME, WEKNORA_NAME, YOUDAO_NAME, YINXIANG_NAME, IMA_NAME } from "../ui/brand-names";
 import {
 	YOUDAO_API_KEY_URL,
 	YOUDAO_INSTALL_CMD,
@@ -23,6 +23,9 @@ import { WEKNORA_TOKEN_HELP_URL, WeknoraProviderConfig } from "../providers/wekn
 import { ImaProvider } from "../providers/ima/ima-provider";
 import { IMA_HELP_URL, ImaProviderConfig } from "../providers/ima/types";
 import { RemoteTargetItem, RemoteTargetPickerModal } from "../ui/remote-target-picker";
+import { OctopProvider } from "../providers/octop/octop-provider";
+import { OCTOP_API_URL_PLACEHOLDER, OctopProviderConfig } from "../providers/octop/types";
+import { isCleartextNonLoopback } from "../providers/octop/helpers";
 
 /**
  * Lucide icon SVGs for provider cards.
@@ -33,6 +36,8 @@ const PROVIDER_ICONS: Record<string, string> = {
 	youdao: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
 	flomo: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/></svg>`,
 	yinxiang: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v8l3-3 3 3V2"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg>`,
+	weknora: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>`,
+	octop: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>`,
 };
 
 const CHEVRON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
@@ -227,6 +232,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				yinxiang: t("brands.yinxiang"),
 				weknora: t("brands.weknora"),
 				ima: t("brands.ima"),
+				octop: t("brands.octop"),
 			}),
 		});
 
@@ -258,6 +264,9 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 				return;
 			case "ima":
 				this.renderImaProvider(containerEl, config as ImaProviderConfig);
+				return;
+			case "octop":
+				this.renderOctopProvider(containerEl, config as OctopProviderConfig);
 				return;
 			default:
 				containerEl.createEl("p", {
@@ -992,6 +1001,162 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			},
 			opts.pickPlaceholder,
 		).open();
+	}
+
+	private renderOctopProvider(parentEl: HTMLElement, config: OctopProviderConfig): void {
+		const containerEl = this.openCollapsibleCard(
+			parentEl,
+			config.displayName || t("brands.octop"),
+			config,
+		);
+		const intro = containerEl.createEl("p");
+		intro.appendText(t("providers.octopIntro", { provider: OCTOP_NAME }));
+		intro.createEl("br");
+		intro.createSpan({ text: t("providers.octopSyncWarning") });
+		intro.createEl("br");
+		intro.createSpan({ text: t("providers.octopMobileLocalhostHint") });
+
+		new Setting(containerEl).setName(t("settings.labels.displayName")).addText((text) =>
+			text.setValue(config.displayName).onChange(async (v) => {
+				config.displayName = v.trim() || t("brands.octop");
+				await this.plugin.saveSettings();
+			}),
+		);
+
+		const persistOctopCredentials = debounce(async () => {
+			await this.plugin.clearOctopAuth(config.id);
+			await this.plugin.saveSettings();
+		}, 500);
+
+		new Setting(containerEl)
+			.setName(t("settings.labels.apiUrl"))
+			.setDesc(
+				t("settings.descriptions.octopApiUrl") +
+					(isCleartextNonLoopback(config.baseUrl ?? "")
+						? ` ${t("providers.octopCleartextWarning")}`
+						: ""),
+			)
+			.addText((text) => {
+				text.setPlaceholder(OCTOP_API_URL_PLACEHOLDER);
+				text.setValue(config.baseUrl ?? "");
+				text.onChange((v) => {
+					config.baseUrl = v.trim() || undefined;
+					persistOctopCredentials();
+				});
+			});
+
+		new Setting(containerEl)
+			.setName(t("settings.labels.username"))
+			.setDesc(t("settings.descriptions.octopUsername"))
+			.addText((text) => {
+				text.setValue(config.username ?? "").onChange((v) => {
+					config.username = v.trim() || undefined;
+					persistOctopCredentials();
+				});
+			});
+
+		new Setting(containerEl)
+			.setName(t("settings.labels.password"))
+			.setDesc(t("settings.descriptions.octopPassword"))
+			.addText((text) => {
+				text.inputEl.type = "password";
+				text.setValue(config.password ?? "").onChange((v) => {
+					config.password = v.trim() || undefined;
+					persistOctopCredentials();
+				});
+			});
+
+		const kbSetting = new Setting(containerEl)
+			.setName(t("settings.labels.knowledgeBase"))
+			.setDesc(t("settings.descriptions.octopKnowledgeBase"));
+		const selectEl = kbSetting.controlEl.createEl("select");
+		const placeholder = document.createElement("option");
+		placeholder.value = "";
+		placeholder.text = config.knowledgeBaseName || t("providers.octopNoKb");
+		selectEl.appendChild(placeholder);
+		selectEl.value = config.knowledgeBaseId ?? "";
+		selectEl.addEventListener("change", () => {
+			const id = selectEl.value;
+			const name = selectEl.selectedOptions[0]?.dataset.name ?? "";
+			config.knowledgeBaseId = id || undefined;
+			config.knowledgeBaseName = id ? name : undefined;
+			void this.plugin.saveSettings();
+		});
+
+		const refreshKnowledgeBases = async (interactive: boolean): Promise<void> => {
+			const provider = this.plugin.registry.get(config.id) as OctopProvider | null;
+			if (!provider) {
+				if (interactive) new Notice(t("providers.notEnabled"));
+				return;
+			}
+			const notice = interactive ? new Notice(t("notices.connectionTesting"), 0) : null;
+			try {
+				const kbs = await provider.listKnowledgeBases();
+				while (selectEl.options.length > 0) selectEl.remove(0);
+				if (kbs.length === 0) {
+					const opt = document.createElement("option");
+					opt.value = "";
+					opt.text = t("providers.octopNoKb");
+					selectEl.appendChild(opt);
+					config.knowledgeBaseId = undefined;
+					config.knowledgeBaseName = undefined;
+				} else {
+					for (const kb of kbs) {
+						const opt = document.createElement("option");
+						opt.value = kb.id;
+						opt.text = kb.name;
+						opt.dataset.name = kb.name;
+						selectEl.appendChild(opt);
+					}
+					const chosen = kbs.find((k) => k.id === config.knowledgeBaseId) ?? kbs[0]!;
+					selectEl.value = chosen.id;
+					config.knowledgeBaseId = chosen.id;
+					config.knowledgeBaseName = chosen.name;
+				}
+				await this.plugin.saveSettings();
+				notice?.hide();
+				if (interactive) new Notice(t("providers.octopTestSuccess", { count: kbs.length }));
+			} catch (err) {
+				notice?.hide();
+				if (interactive) {
+					new Notice(
+						err instanceof Error ? err.message : t("providers.octopRefreshFailed"),
+					);
+				}
+			}
+		};
+		kbSetting.addButton((btn) =>
+			btn.setButtonText(t("settings.buttons.refresh")).onClick(() => void refreshKnowledgeBases(true)),
+		);
+		if (config.baseUrl?.trim() && config.username?.trim() && config.password) {
+			void refreshKnowledgeBases(false);
+		}
+
+		new Setting(containerEl).setName(t("settings.labels.enabled")).addToggle((tog) =>
+			tog.setValue(config.enabled).onChange(async (v) => {
+				config.enabled = v;
+				await this.plugin.saveSettings();
+			}),
+		);
+
+		new Setting(containerEl)
+			.setName(t("settings.labels.testConnection"))
+			.addButton((btn) =>
+				btn.setButtonText(t("settings.buttons.test")).onClick(async () => {
+					const provider = this.plugin.registry.get(config.id) as OctopProvider | null;
+					if (!provider) {
+						new Notice(t("providers.notEnabled"));
+						return;
+					}
+					const notice = new Notice(t("notices.connectionTesting"), 0);
+					const result = await provider.testConnection?.();
+					notice.hide();
+					new Notice(
+						result?.message ??
+							(result?.ok ? t("notices.connectionSuccess") : t("notices.connectionFailed")),
+					);
+				}),
+			);
 	}
 
 	private showYoudaoInstallNotice(reason: string): void {

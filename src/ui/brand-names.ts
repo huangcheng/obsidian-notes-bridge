@@ -8,4 +8,5 @@ export const FLOMO_NAME = "Flomo";
 export const YINXIANG_NAME = "Yinxiang";
 export const WEKNORA_NAME = "WeKnora";
 export const IMA_NAME = "IMA";
+export const OCTOP_NAME = "Octop";
 export const PLUGIN_NAME = "Notes Bridge";
